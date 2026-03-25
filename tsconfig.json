@@ -1,3 +1,26 @@
 {
-  "extends": "./.quasar/tsconfig.json"
+  "extends": "./.quasar/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "noImplicitAny": false,
+    "paths": {
+      "#q-app/*": ["src/*"],
+      "#components/*": ["src/components/*"],
+      "#layouts/*": ["src/layouts/*"],
+      "#pages/*": ["src/pages/*"],
+      "#boot/*": ["src/boot/*"]
+    },
+    "types": ["quasar"]
+  },
+  "include": [
+    ".quasar/**/*.ts",
+    ".quasar/**/*.d.ts",
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.vue"
+  ],
+  "typeRoots": [
+    "./node_modules/@types",
+    "./.quasar"
+  ]
 }

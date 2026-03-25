@@ -1,23 +1,26 @@
 <template>
-  <div class="fullscreen bg-blue text-white text-center q-pa-md flex flex-center">
+  <div class="fullscreen bg-[#0050a6] text-[#f3f4f6] text-center q-pa-md flex flex-center">
     <div>
-      <div style="font-size: 30vh">404</div>
+      <q-img class="w-48 h-48" src="/backgrounds/background3.png" img-class="w-48 h-48 mx-auto"></q-img>
+      <div style="font-size: 20vh">404</div>
 
-      <div class="text-h2" style="opacity: 0.4">Oops. Nothing here...</div>
+      <div class="text-h3 font-thin" style="opacity: 0.9">
+        Oops, non c'è nulla qui...
+      </div>
 
-      <q-btn
-        class="q-mt-xl"
-        color="white"
-        text-color="blue"
-        unelevated
-        to="/"
-        label="Go Home"
-        no-caps
-      />
+      <q-btn class="q-mt-xl" color="white" text-color="blue" unelevated to="/" label="Homepage" no-caps />
     </div>
   </div>
 </template>
+<style scoped>
+.bg-iena {
+  background: url("/backgrounds/background3.png") no-repeat center center;
+}
+</style>
+<script lang="ts">
+import { defineComponent } from "vue";
 
-<script setup lang="ts">
-//
+export default defineComponent({
+  name: "ErrorNotFound",
+});
 </script>
