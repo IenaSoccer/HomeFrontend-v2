@@ -2,7 +2,7 @@ name: Deploy Quasar Application
 
 on:
   push:
-    branches: [ release ]
+    branches: [ release, staging ]
 
 jobs:
   deploy:
@@ -32,7 +32,7 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.DEPLOY_PATH }}
-            git fetch origin release
-            git reset --hard origin/release
+            git fetch origin ${{ github.ref_name }}
+            git reset --hard origin/${{ github.ref_name }}
             npm ci
             npm run build
