@@ -9,15 +9,23 @@
       <div class="q-px-lg q-py-md select-none">
         <q-timeline v-if="resources" :layout="layout" color="secondary">
           <q-timeline-entry tag="h3" class="font-bold text-4xl tenada" heading>
-            <span class="border-b-4 border-orange-600 transition transition-all hover:text-[#f3f4f6]">
+            <span
+              class="border-b-4 border-orange-600 transition transition-all hover:text-[#f3f4f6]"
+            >
               Storia
             </span>
             <br />
           </q-timeline-entry>
 
-          <q-timeline-entry v-for="(single, k) in history" :key="single.id" :color="k % 2 === 0 ? 'teal' : 'primary'"
-            :side="k % 2 === 0 ? 'right' : 'left'">
-            <div class="transition transition-all hover:text-[#f3f4f6] text-lg font-normal coolvetica">
+          <q-timeline-entry
+            v-for="(single, k) in history"
+            :key="single.id"
+            :color="k % 2 === 0 ? 'teal' : 'primary'"
+            :side="k % 2 === 0 ? 'right' : 'left'"
+          >
+            <div
+              class="transition transition-all hover:text-[#f3f4f6] text-lg font-normal coolvetica"
+            >
               {{ single.description }}
             </div>
             <template #title>
@@ -25,10 +33,18 @@
                 <h4 class="text-2xl font-bold transition transition-all hover:text-[#f3f4f6]">
                   {{ single.name }}
                 </h4>
-                <q-btn round dense icon="image" color="blue" class="mx-4 p-2" @click="
-                  carousel = single;
-                show = true;
-                " v-if="single.content.data.length > 0">
+                <q-btn
+                  round
+                  dense
+                  icon="image"
+                  color="blue"
+                  class="mx-4 p-2"
+                  @click="
+                    carousel = single;
+                    show = true;
+                  "
+                  v-if="single.content.data.length > 0"
+                >
                 </q-btn>
               </div>
             </template>
@@ -42,8 +58,9 @@
           </q-timeline-entry>
         </q-timeline>
         <div v-else>
-          <span class="font-bold text-3xl coolvetica transition transition-all hover:text-[#f3f4f6]">Non ci sono
-            contenuti</span>
+          <span class="font-bold text-3xl coolvetica transition transition-all hover:text-[#f3f4f6]"
+            >Non ci sono contenuti</span
+          >
         </div>
       </div>
     </div>
@@ -62,17 +79,17 @@ video {
 }
 </style>
 <script lang="ts">
-import { defineComponent, inject } from "vue";
-import { computed } from "vue";
-import { useQuasar } from "quasar";
-import type { EventBus } from "quasar";
-import WCarousel from "src/components/Widgets/Mappable/WCarousel.vue";
-import type { Resource } from "src/contracts/Resource";
-import type { Attachment } from "src/contracts/Attachment";
-import type { UUID } from "src/contracts/UUID";
+import { defineComponent, inject } from 'vue';
+import { computed } from 'vue';
+import { useQuasar } from 'quasar';
+import type { EventBus } from 'quasar';
+import WCarousel from 'src/components/Widgets/Mappable/WCarousel.vue';
+import type { Resource } from 'src/contracts/Resource';
+import type { Attachment } from 'src/contracts/Attachment';
+import type { UUID } from 'src/contracts/UUID';
 
 export default defineComponent({
-  name: "WTimeline",
+  name: 'WTimeline',
   components: {
     WCarousel,
   },
@@ -85,7 +102,7 @@ export default defineComponent({
   data() {
     return {
       show: false,
-      bus: inject("bus") as EventBus,
+      bus: inject('bus') as EventBus,
       key: 0,
       loaded: false,
       carousel: {} as Resource<UUID>,
@@ -101,11 +118,7 @@ export default defineComponent({
 
     return {
       layout: computed(() => {
-        return $q.screen.lt.sm
-          ? "dense"
-          : $q.screen.lt.md
-            ? "comfortable"
-            : "loose";
+        return $q.screen.lt.sm ? 'dense' : $q.screen.lt.md ? 'comfortable' : 'loose';
       }),
     };
   },

@@ -13,11 +13,11 @@
 </template>
 
 <script lang="ts">
-import type { NavItem } from "src/contracts/Navbar";
-import { defineComponent } from "vue";
+import type { NavItem } from 'src/contracts/Navbar';
+import { defineComponent } from 'vue';
 
 export default defineComponent({
-  name: "HeaderMobileLink",
+  name: 'HeaderMobileLink',
   props: {
     link: {
       type: {} as () => NavItem,

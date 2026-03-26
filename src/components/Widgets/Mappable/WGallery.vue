@@ -20,9 +20,7 @@
           </q-intersection>
         </div>
         <div v-else class="flex flex-row justify-center items-center my-8">
-          <div class="select-none font-bold text-4xl text-dark roboto-flex">
-            Seleziona un album
-          </div>
+          <div class="select-none font-bold text-4xl text-dark roboto-flex">Seleziona un album</div>
         </div>
       </template>
     </q-splitter>
@@ -32,17 +30,17 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, inject } from "vue";
-import { ref } from "vue";
+import { defineComponent, inject } from 'vue';
+import { ref } from 'vue';
 
-import EAlbum from "src/components/Elements/EAlbum.vue";
-import EFolders from "src/components/Elements/EFolders.vue";
-import type { Resource } from "src/contracts/Resource";
-import type { UUID } from "src/contracts/UUID";
-import type { EventBus } from "quasar";
+import EAlbum from 'src/components/Elements/EAlbum.vue';
+import EFolders from 'src/components/Elements/EFolders.vue';
+import type { Resource } from 'src/contracts/Resource';
+import type { UUID } from 'src/contracts/UUID';
+import type { EventBus } from 'quasar';
 
 export default defineComponent({
-  name: "WGallery",
+  name: 'WGallery',
   components: {
     EAlbum,
     EFolders,
@@ -50,7 +48,7 @@ export default defineComponent({
   async mounted() {
     this.loaded = false;
 
-    this.bus.on("change-folder", (f: Resource<UUID>) => {
+    this.bus.on('change-folder', (f: Resource<UUID>) => {
       this.selected = f;
     });
 
@@ -59,9 +57,11 @@ export default defineComponent({
       return;
     }
 
-    await Promise.all(this.folders.map((folder: Resource<UUID>) => {
-      this.album.push(folder);
-    }));
+    await Promise.all(
+      this.folders.map((folder: Resource<UUID>) => {
+        this.album.push(folder);
+      }),
+    );
 
     this.loaded = true;
   },
@@ -75,9 +75,12 @@ export default defineComponent({
     return {
       album: [] as Resource<UUID>[],
       selected: {} as Resource<UUID>,
-      bus: inject("bus") as EventBus,
+      bus: inject('bus') as EventBus,
       loaded: false,
-      ensureResource: inject("ensureResource") as (uuid: UUID, resource: string) => Promise<Resource<UUID>[]>,
+      ensureResource: inject('ensureResource') as (
+        uuid: UUID,
+        resource: string,
+      ) => Promise<Resource<UUID>[]>,
     };
   },
   setup() {

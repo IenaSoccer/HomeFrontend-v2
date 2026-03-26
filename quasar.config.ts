@@ -11,11 +11,7 @@ export default defineConfig(() => {
     css: ['app.scss', 'styles.scss'],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
-    extras: [
-      'fontawesome-v6',
-      'roboto-font',
-      'material-icons',
-    ],
+    extras: ['fontawesome-v6', 'roboto-font', 'material-icons'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
@@ -34,27 +30,31 @@ export default defineConfig(() => {
       rebuildCache: true,
 
       env: {
-        PRODUCTION_API_URL: "https://api.ienasoccer.it/api/v2/public",
-        PRODUCTION_MEDIA_URL: "https://media.ienasoccer.it",
-        PRODUCTION_ATTACHMENTS_URL: "https://media.ienasoccer.it",
-        PRODUCTION_PROFILE_URL: "https://media.ienasoccer.it",
-        DEVELOPMENT_API_URL: "http://localhost:8000/api/v2/public",
-        DEVELOPMENT_MEDIA_URL: "http://localhost/IenaSoccer/Media",
-        DEVELOPMENT_ATTACHMENTS_URL: "http://localhost/IenaSoccer/Media",
-        DEVELOPMENT_PROFILE_URL: "http://localhost/IenaSoccer/Media"
+        PRODUCTION_API_URL: 'https://api.ienasoccer.it/api/v2/public',
+        PRODUCTION_MEDIA_URL: 'https://media.ienasoccer.it',
+        PRODUCTION_ATTACHMENTS_URL: 'https://media.ienasoccer.it',
+        PRODUCTION_PROFILE_URL: 'https://media.ienasoccer.it',
+        DEVELOPMENT_API_URL: 'http://localhost:8000/api/v2/public',
+        DEVELOPMENT_MEDIA_URL: 'http://localhost/IenaSoccer/Media',
+        DEVELOPMENT_ATTACHMENTS_URL: 'http://localhost/IenaSoccer/Media',
+        DEVELOPMENT_PROFILE_URL: 'http://localhost/IenaSoccer/Media',
       },
 
-      minify: false,
+      minify: true,
       polyfillModulePreload: true,
 
       vitePlugins: [
-        ['vite-plugin-checker', {
-          vueTsc: true,
-          eslint: {
-            lintCommand: 'eslint -c ./eslint.config.js "./src*/**/*.{ts,js,mjs,cjs,vue}"',
-            useFlatConfig: true
-          }
-        }, { server: false }]
+        [
+          'vite-plugin-checker',
+          {
+            vueTsc: true,
+            eslint: {
+              lintCommand: 'eslint -c ./eslint.config.js "./src*/**/*.{ts,js,mjs,cjs,vue}"',
+              useFlatConfig: true,
+            },
+          },
+          { server: false },
+        ],
       ],
     },
 
@@ -79,10 +79,7 @@ export default defineConfig(() => {
     ssr: {
       prodPort: 3000,
 
-      middlewares: [
-        'render',
-      ],
-
+      middlewares: ['render'],
 
       pwa: false,
     },
@@ -93,8 +90,7 @@ export default defineConfig(() => {
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-cordova-apps/configuring-cordova
-    cordova: {
-    },
+    cordova: {},
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-capacitor-apps/configuring-capacitor
     capacitor: {
@@ -103,7 +99,6 @@ export default defineConfig(() => {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/configuring-electron
     electron: {
-
       preloadScripts: ['electron-preload'],
 
       inspectPort: 5858,

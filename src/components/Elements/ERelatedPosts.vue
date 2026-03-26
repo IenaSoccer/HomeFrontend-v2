@@ -1,12 +1,11 @@
 <template>
-  <div class="text-3xl text-dark p-8 font-bold roboto-flex">
-    Ti potrebbe interessare
-  </div>
+  <div class="text-3xl text-dark p-8 font-bold roboto-flex">Ti potrebbe interessare</div>
   <div v-if="loaded" class="text-xl text-dark p-8">
     <div v-if="news && news.length > 1">
-      <div v-for="n in shuffleArray(
-        news.filter((x) => x.id !== currentPostId)
-      ).slice(0, 3)" :key="n.id">
+      <div
+        v-for="n in shuffleArray(news.filter((x) => x.id !== currentPostId)).slice(0, 3)"
+        :key="n.id"
+      >
         <q-btn flat :to="`/post/${n.id}/${slugify(n.name)}`">
           <q-card flat class="w-[256px] cursor-pointer w-full h-full select-none">
             <q-img height="256px" width="256px" :src="thumb((n.thumbnail as Attachment).data.path)">
@@ -28,30 +27,30 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, inject } from "vue";
+import { defineComponent, inject } from 'vue';
 
-import { loadResource, downloadAttachments } from "src/resources/loader";
-import type { EventBus } from "quasar";
-import type { Resource } from "src/contracts/Resource";
-import type { Mappings } from "src/contracts/Mappings";
-import { useMappingsStore } from "src/stores/Mappings";
-import type { Attachment } from "src/contracts/Attachment";
-import { useResourceStore } from "src/stores/Resources";
-import type { UUID } from "src/contracts/UUID";
+import { loadResource, downloadAttachments } from 'src/resources/loader';
+import type { EventBus } from 'quasar';
+import type { Resource } from 'src/contracts/Resource';
+import type { Mappings } from 'src/contracts/Mappings';
+import { useMappingsStore } from 'src/stores/Mappings';
+import type { Attachment } from 'src/contracts/Attachment';
+import { useResourceStore } from 'src/stores/Resources';
+import type { UUID } from 'src/contracts/UUID';
 
 export default defineComponent({
-  name: "WRelatedPosts",
+  name: 'WRelatedPosts',
   props: {
     currentPostId: {
       type: String,
       required: true,
     },
   },
-  setup() { },
+  setup() {},
   data() {
     return {
       mappings: {} as Mappings,
-      bus: inject("bus") as EventBus,
+      bus: inject('bus') as EventBus,
       news: [] as Resource<Attachment>[],
       loaded: false,
     };
@@ -80,24 +79,25 @@ export default defineComponent({
     },
     slugify(str: string) {
       return String(str)
-        .normalize("NFKD")
-        .replace(/[\u0300-\u036f]/g, "")
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
         .trim()
         .toLowerCase()
-        .replace(/[^a-z0-9 -]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-");
+        .replace(/[^a-z0-9 -]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
     },
     async loadResource(res: string): Promise<Resource<UUID>[]> {
-      return loadResource(
-        this.mappings.defaults[res]!.id,
-        useResourceStore()
-      ) as Promise<Resource<UUID>[]>;
+      return loadResource(this.mappings.defaults[res]!.id, useResourceStore()) as Promise<
+        Resource<UUID>[]
+      >;
     },
     async getAllPosts() {
       const risorse = await this.loadResource('news');
-      risorse.forEach(n => {
-        downloadAttachments(n).then(r => this.news.push(r as Resource<Attachment>)).catch(() => { });
+      risorse.forEach((n) => {
+        downloadAttachments(n)
+          .then((r) => this.news.push(r as Resource<Attachment>))
+          .catch(() => {});
       });
       return this.news;
     },

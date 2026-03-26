@@ -10,28 +10,29 @@ const routes: RouteRecordRaw[] = [
       { path: 'about', component: () => import('pages/AboutPage.vue') },
       { path: 'contacts', component: () => import('pages/ContactPage.vue') },
       {
-        path: 'gallery', component: () => import('pages/GalleryPage.vue'), children: [
+        path: 'gallery',
+        component: () => import('pages/GalleryPage.vue'),
+        children: [
           {
             path: ':uuid([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})',
             component: () => import('pages/GalleryPage.vue'),
           },
-        ]
+        ],
       },
       { path: 'creator', component: () => import('pages/CreatorPage.vue') },
       {
         path: 'post/:uuid([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})/:slug([a-zA-Z0-9_-]+)',
-        component: () => import('pages/PostPage.vue')
+        component: () => import('pages/PostPage.vue'),
       },
       {
         path: 'post/preview/:uuid([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})',
-        component: () => import('pages/PostPage.vue')
+        component: () => import('pages/PostPage.vue'),
       },
       {
         path: 'private/:fid([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})/:hash([a-fA-F0-9]{32})',
-        component: () => import('pages/PrivatePage.vue')
+        component: () => import('pages/PrivatePage.vue'),
       },
-
-    ]
+    ],
   },
 
   {

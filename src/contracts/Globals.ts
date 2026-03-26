@@ -1,5 +1,5 @@
 interface Globals {
-    page: string;
+  page: string;
 }
 
 export default Globals;

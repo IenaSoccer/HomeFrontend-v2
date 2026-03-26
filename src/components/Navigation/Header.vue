@@ -1,16 +1,21 @@
 <template>
   <q-header>
-    <div class="bg-dark text-[#f3f4f6] lg:h-[100px] h-full flex flex-row items-center justify-between">
+    <div
+      class="bg-dark text-[#f3f4f6] lg:h-[100px] h-full flex flex-row items-center justify-between"
+    >
       <div class="h-full z-20">
         <q-intersection transition="slide-right">
-          <q-toolbar-title class="flex flex-row items-center justify-center h-[100px] clip-left stripes-bg px-8">
+          <q-toolbar-title
+            class="flex flex-row items-center justify-center h-[100px] clip-left stripes-bg px-8"
+          >
             <HeaderFirm />
           </q-toolbar-title>
         </q-intersection>
       </div>
       <q-intersection transition="slide-left">
         <div
-          class="flex-row h-[100px] w-full items-center justify-center lg:justify-around bg-primary stripes-bg clip-right px-4 hidden lg:flex">
+          class="flex-row h-[100px] w-full items-center justify-center lg:justify-around bg-primary stripes-bg clip-right px-4 hidden lg:flex"
+        >
           <div class="flex flex-row justify-center items-center">
             <HeaderLink v-for="(option, k) in navbar" :key="k" :item="option" />
           </div>
@@ -30,19 +35,19 @@
 
 .stripes-bg {
   background-color: var(--q-primary);
-  background-image: url("/textures/stripes.png");
+  background-image: url('/textures/stripes.png');
   background-repeat: repeat;
 }
 </style>
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent } from 'vue';
 
-import HeaderLink from "src/components/Navigation/Header/HeaderLink.vue";
-import HeaderFirm from "src/components/Navigation/Header/HeaderFirm.vue";
-import type { NavItem } from "src/contracts/Navbar";
+import HeaderLink from 'src/components/Navigation/Header/HeaderLink.vue';
+import HeaderFirm from 'src/components/Navigation/Header/HeaderFirm.vue';
+import type { NavItem } from 'src/contracts/Navbar';
 
 export default defineComponent({
-  name: "IHeader",
+  name: 'IHeader',
   props: {
     navbar: {
       type: {} as () => NavItem[],
@@ -53,6 +58,6 @@ export default defineComponent({
     HeaderLink,
     HeaderFirm,
   },
-  setup() { },
+  setup() {},
 });
 </script>

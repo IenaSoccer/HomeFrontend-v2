@@ -1,23 +1,23 @@
 interface CarouselInput {
   value?: {
-    title?: string
-    srcset: string[]
-  }
+    title?: string;
+    srcset: string[];
+  };
 }
 
 interface CarouselItem {
-  id: number
-  type: 'image'
+  id: number;
+  type: 'image';
   value: {
-    title: string
-    src: string
-  }
+    title: string;
+    src: string;
+  };
 }
 
 export const Carouselize = (
-  data: CarouselInput | null | undefined
+  data: CarouselInput | null | undefined,
 ): CarouselItem[] | CarouselInput | null | undefined => {
-  const final: CarouselItem[] = []
+  const final: CarouselItem[] = [];
 
   if (data && data.value) {
     data.value.srcset.forEach((src, index) => {
@@ -26,11 +26,11 @@ export const Carouselize = (
         type: 'image',
         value: {
           title: data.value?.title ?? 'Album',
-          src
-        }
-      })
-    })
+          src,
+        },
+      });
+    });
   }
 
-  return final.length > 0 ? final : data
-}
+  return final.length > 0 ? final : data;
+};

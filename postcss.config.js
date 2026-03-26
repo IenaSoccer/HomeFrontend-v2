@@ -18,6 +18,6 @@ export default {
         'last 4 iOS versions',
       ],
     }),
-    tailwindcss()
+    tailwindcss(),
   ],
 };

@@ -1,7 +1,16 @@
 <template>
   <div class="w-48">
-    <q-select bottom-slots v-model="model" :options="options" label="Lingua" label-color="white" color="orange"
-      input-class="text-dark" :dense="dense" :options-dense="denseOpts">
+    <q-select
+      bottom-slots
+      v-model="model"
+      :options="options"
+      label="Lingua"
+      label-color="white"
+      color="orange"
+      input-class="text-dark"
+      :dense="dense"
+      :options-dense="denseOpts"
+    >
       <template v-slot:before>
         <q-icon color="white" name="language" />
       </template>
@@ -9,16 +18,16 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent } from "vue";
-import { ref } from "vue";
+import { defineComponent } from 'vue';
+import { ref } from 'vue';
 
 export default defineComponent({
-  name: "LanguageBar",
+  name: 'LanguageBar',
   setup() {
     return {
-      model: ref<string>(""),
+      model: ref<string>(''),
 
-      options: ["🇮🇹 - Italiano"],
+      options: ['🇮🇹 - Italiano'],
 
       dense: ref(false),
       denseOpts: ref(false),

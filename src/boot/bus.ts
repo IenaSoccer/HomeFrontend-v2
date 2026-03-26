@@ -1,11 +1,11 @@
-import { boot } from 'quasar/wrappers'
-import mitt from 'mitt'
+import { boot } from 'quasar/wrappers';
+import mitt from 'mitt';
 
-const emitter = mitt()
+const emitter = mitt();
 
 export default boot(({ app }) => {
-  app.provide('bus', emitter)
-  app.config.globalProperties.$bus = emitter
-})
+  app.provide('bus', emitter);
+  app.config.globalProperties.$bus = emitter;
+});
 
-export { emitter }
+export { emitter };

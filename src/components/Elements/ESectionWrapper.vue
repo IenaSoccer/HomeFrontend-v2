@@ -9,11 +9,11 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent } from "vue";
-import { ref } from "vue";
+import { defineComponent } from 'vue';
+import { ref } from 'vue';
 
 export default defineComponent({
-  name: "ESectionWrapper",
+  name: 'ESectionWrapper',
   props: {
     title: {
       type: String,
@@ -34,7 +34,7 @@ export default defineComponent({
   },
   setup() {
     return {
-      text: ref(""),
+      text: ref(''),
     };
   },
 });

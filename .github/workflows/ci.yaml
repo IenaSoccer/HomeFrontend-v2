@@ -1,0 +1,23 @@
+name: Quasar - Frontend Deployment
+on:
+  pull_request:
+    branches:
+      - release
+  push:
+    branches:
+      - release
+
+jobs:
+  quasar:
+    runs-on: ubuntu-latest
+    name: Build and Deploy App
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: cd ${{ secrets.SSH_PATH }} && chmod u+x ./.scripts/deploy.sh && ./.scripts/deploy.sh

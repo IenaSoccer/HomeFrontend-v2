@@ -12,9 +12,9 @@ interface NavItem {
 }
 
 interface FooterLink {
-    title: string;
-    caption: string;
-    link: string;
+  title: string;
+  caption: string;
+  link: string;
 }
 
 interface FooterLinks {

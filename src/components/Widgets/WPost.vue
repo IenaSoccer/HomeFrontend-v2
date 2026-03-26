@@ -8,23 +8,23 @@
           </h1>
 
           <div class="py-4" v-if="post.thumbnail">
-            <q-img :src="thumb((post.thumbnail as Attachment).data.path)" class="w-full h-[700px] shadow"
-              img-class="object-cover">
+            <q-img
+              :src="thumb((post.thumbnail as Attachment).data.path)"
+              class="w-full h-[700px] shadow"
+              img-class="object-cover"
+            >
             </q-img>
           </div>
           <div class="flex flex-row justify-between flex-wrap items-center pb-4">
             <div class="flex flex-row text-md roboto-flex text-blue-700">
               <div class="font-thin" v-for="(tag, index) in post.attributes.tags" :key="index">
                 <q-btn class="font-light" unelevated>
-                  {{ "#" + tag }}
+                  {{ '#' + tag }}
                 </q-btn>
               </div>
             </div>
             <div class="text-lg roboto-flex font-light text-gray-700">
-              {{
-                "Pubblicato il " +
-                new Date(post.created_at).toLocaleDateString()
-              }}
+              {{ 'Pubblicato il ' + new Date(post.created_at).toLocaleDateString() }}
             </div>
           </div>
           <div class="text-dark roboto-flex text-5xl select-none font-bold">
@@ -36,13 +36,15 @@
           <WRelatedPosts :currentPostId="post.id" />
         </div>
       </div>
-      <WShare class="py-8 md:w-[33%] w-full md:px-0 px-4" :url="computedUrl(post.id, slugify(post.name))"
-        :title="post.name" :thumb="computedThumb((post.thumbnail as Attachment).data.path)" />
+      <WShare
+        class="py-8 md:w-[33%] w-full md:px-0 px-4"
+        :url="computedUrl(post.id, slugify(post.name))"
+        :title="post.name"
+        :thumb="computedThumb((post.thumbnail as Attachment).data.path)"
+      />
     </div>
     <div v-else class="flex flex-row justify-center items-center h-[400px]">
-      <div class="select-none font-bold text-4xl text-dark roboto-flex">
-        Post non esistente
-      </div>
+      <div class="select-none font-bold text-4xl text-dark roboto-flex">Post non esistente</div>
     </div>
   </div>
   <div v-else class="flex flex-row justify-center items-center">
@@ -50,17 +52,17 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, inject } from "vue";
+import { defineComponent, inject } from 'vue';
 
-import WRelatedPosts from "../Elements/ERelatedPosts.vue";
-import WShare from "../Elements/EShare.vue";
-import type { EventBus } from "quasar";
-import type { UUID } from "src/contracts/UUID";
-import type { Resource } from "src/contracts/Resource";
-import type { Attachment } from "src/contracts/Attachment";
+import WRelatedPosts from '../Elements/ERelatedPosts.vue';
+import WShare from '../Elements/EShare.vue';
+import type { EventBus } from 'quasar';
+import type { UUID } from 'src/contracts/UUID';
+import type { Resource } from 'src/contracts/Resource';
+import type { Attachment } from 'src/contracts/Attachment';
 
 export default defineComponent({
-  name: "WPost",
+  name: 'WPost',
   components: {
     WRelatedPosts,
     WShare,
@@ -73,29 +75,30 @@ export default defineComponent({
   },
   methods: {
     computedUrl(id: UUID, slug: string) {
-      return window.location.origin + "/#/post/" + id + "/" + slug;
+      return window.location.origin + '/#/post/' + id + '/' + slug;
     },
     computedThumb(thumb: string) {
       return window.location.origin + thumb;
     },
     slugify(str: string) {
       return String(str)
-        .normalize("NFKD")
-        .replace(/[\u0300-\u036f]/g, "")
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
         .trim()
         .toLowerCase()
-        .replace(/[^a-z0-9 -]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-");
+        .replace(/[^a-z0-9 -]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
     },
     thumb(url: string) {
-      return `${process.env[(process.env.NODE_ENV as 'development' | 'production').toUpperCase() + '_ATTACHMENTS_URL']}${process.env.NODE_ENV === "production" ? "/1280/" : "/"
-        }${url}`;
+      return `${process.env[(process.env.NODE_ENV as 'development' | 'production').toUpperCase() + '_ATTACHMENTS_URL']}${
+        process.env.NODE_ENV === 'production' ? '/1280/' : '/'
+      }${url}`;
     },
   },
   data() {
     return {
-      bus: inject("bus") as EventBus,
+      bus: inject('bus') as EventBus,
       data: {} as Resource<Attachment>,
       loaded: true,
     };

@@ -7,16 +7,16 @@
 </template>
 <style scoped>
 .bg-contact {
-  background: url("/backgrounds/background5.jpg") no-repeat top left;
+  background: url('/backgrounds/background5.jpg') no-repeat top left;
 }
 </style>
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent } from 'vue';
 
-import WContact from "src/components/Widgets/WContact.vue";
+import WContact from 'src/components/Widgets/WContact.vue';
 
 export default defineComponent({
-  name: "ContactPage",
+  name: 'ContactPage',
   components: {
     WContact,
   },

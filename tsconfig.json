@@ -19,8 +19,5 @@
     "src/**/*.d.ts",
     "src/**/*.vue"
   ],
-  "typeRoots": [
-    "./node_modules/@types",
-    "./.quasar"
-  ]
+  "typeRoots": ["./node_modules/@types", "./.quasar"]
 }

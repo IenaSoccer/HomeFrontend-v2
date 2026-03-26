@@ -21,8 +21,11 @@
       <div class="flex flex-row flex-wrap justify-start items-center">
         <div v-for="f in folders" :key="f.id">
           <q-btn @click="changeFolder(f)" flat class="h-32 w-64 m-4 border-b-4 border-blue-700">
-            <q-img :src="thumbnails[f.id]?.data.path ? thumb(thumbnails[f.id]!.data.path) : ''"
-              class="absolute-full bg-cover bg-center h-full border-b-4" :class="`border-[#0000ff]`">
+            <q-img
+              :src="thumbnails[f.id]?.data.path ? thumb(thumbnails[f.id]!.data.path) : ''"
+              class="absolute-full bg-cover bg-center h-full border-b-4"
+              :class="`border-[#0000ff]`"
+            >
               <div class="text-subtitle2 flex h-full w-full flex-col flex-center">
                 <q-icon name="folder" class="block" size="sm"></q-icon>
                 <div class="font-thin">{{ f.name }}</div>
@@ -33,9 +36,7 @@
       </div>
     </q-intersection>
     <div v-else class="flex flex-row justify-center items-center h-[400px]">
-      <div class="font-bold text-4xl text-dark roboto-flex">
-        Non ci sono contenuti
-      </div>
+      <div class="font-bold text-4xl text-dark roboto-flex">Non ci sono contenuti</div>
     </div>
   </div>
   <div v-else class="flex flex-row justify-center items-center m-8">
@@ -43,16 +44,16 @@
   </div>
 </template>
 <script lang="ts">
-import type { EventBus } from "quasar";
-import type { Attachment } from "src/contracts/Attachment";
-import type { Resource } from "src/contracts/Resource";
-import type { UUID } from "src/contracts/UUID";
-import { extractThumbnails } from "src/resources/loader";
-import { useResourceStore } from "src/stores/Resources";
-import { defineComponent, inject, ref } from "vue";
+import type { EventBus } from 'quasar';
+import type { Attachment } from 'src/contracts/Attachment';
+import type { Resource } from 'src/contracts/Resource';
+import type { UUID } from 'src/contracts/UUID';
+import { extractThumbnails } from 'src/resources/loader';
+import { useResourceStore } from 'src/stores/Resources';
+import { defineComponent, inject, ref } from 'vue';
 
 export default defineComponent({
-  name: "WFolders",
+  name: 'WFolders',
   props: {
     folders: {
       type: {} as () => Resource<UUID>[],
@@ -60,36 +61,39 @@ export default defineComponent({
     },
   },
   async mounted() {
-    await Promise.all(this.folders.map((folder: Resource<UUID>) => {
-      void this.useThumbnail(folder);
-    }));
+    await Promise.all(
+      this.folders.map((folder: Resource<UUID>) => {
+        void this.useThumbnail(folder);
+      }),
+    );
   },
   methods: {
     async useThumbnail(f: Resource<UUID>) {
-      this.thumbnails[f.id] = await this.getThumbnail(f) as Attachment;
+      this.thumbnails[f.id] = (await this.getThumbnail(f)) as Attachment;
     },
     async getThumbnail(folder: Resource<UUID>) {
       return (await extractThumbnails(folder.thumbnail as UUID, useResourceStore()))[0];
     },
     changeFolder(f: Resource<UUID>) {
-      this.bus.emit("change-folder", f);
+      this.bus.emit('change-folder', f);
     },
     thumb(url: string) {
-      return `${process.env[(process.env.NODE_ENV as 'development' | 'production').toUpperCase() + '_ATTACHMENTS_URL']}${process.env.NODE_ENV === "production" ? "/800/" : "/"
-        }${url}`;
+      return `${process.env[(process.env.NODE_ENV as 'development' | 'production').toUpperCase() + '_ATTACHMENTS_URL']}${
+        process.env.NODE_ENV === 'production' ? '/800/' : '/'
+      }${url}`;
     },
   },
   data() {
     return {
-      bus: inject("bus") as EventBus,
+      bus: inject('bus') as EventBus,
       loaded: true,
-      thumbnails: {} as Record<string, Attachment>
+      thumbnails: {} as Record<string, Attachment>,
     };
   },
   setup() {
     return {
       popup: ref(false),
-      popupText: ref(""),
+      popupText: ref(''),
     };
   },
 });

@@ -1,6 +1,12 @@
 <template>
   <q-page class="max-h-[600px] overflow-y-auto">
-    <video class="fixed-full opacity-80 w-full h-full" :src="background" autoplay loop muted></video>
+    <video
+      class="fixed-full opacity-80 w-full h-full"
+      :src="background"
+      autoplay
+      loop
+      muted
+    ></video>
     <WTimeline :history="history" />
   </q-page>
 </template>
@@ -10,31 +16,34 @@ video {
 }
 </style>
 <script lang="ts">
-import { defineComponent, inject, reactive } from "vue";
+import { defineComponent, inject, reactive } from 'vue';
 
-import WTimeline from "src/components/Widgets/WTimeline.vue";
-import { loadResource } from "src/resources/loader";
-import type { Mappings } from "src/contracts/Mappings";
-import { useMappingsStore } from "src/stores/Mappings";
-import type { Resource } from "src/contracts/Resource";
-import { useResourceStore } from "src/stores/Resources";
-import type { UUID } from "src/contracts/UUID";
-import type { EventBus } from "quasar";
+import WTimeline from 'src/components/Widgets/WTimeline.vue';
+import { loadResource } from 'src/resources/loader';
+import type { Mappings } from 'src/contracts/Mappings';
+import { useMappingsStore } from 'src/stores/Mappings';
+import type { Resource } from 'src/contracts/Resource';
+import { useResourceStore } from 'src/stores/Resources';
+import type { UUID } from 'src/contracts/UUID';
+import type { EventBus } from 'quasar';
 
 export default defineComponent({
-  name: "AboutPage",
+  name: 'AboutPage',
   components: {
     WTimeline,
   },
   data() {
     return {
       history: [] as Resource<UUID>[],
-      bus: inject("bus") as EventBus,
-      resources: reactive(inject("data") as Record<string, Resource<UUID>[]>),
+      bus: inject('bus') as EventBus,
+      resources: reactive(inject('data') as Record<string, Resource<UUID>[]>),
       selectedAlbum: {} as Resource<UUID>,
-      mappings: reactive(inject("mappings") as Mappings),
+      mappings: reactive(inject('mappings') as Mappings),
       loaded: false,
-      ensureResource: inject("ensureResource") as (uuid: UUID, resource: string) => Promise<Resource<UUID>[]>,
+      ensureResource: inject('ensureResource') as (
+        uuid: UUID,
+        resource: string,
+      ) => Promise<Resource<UUID>[]>,
     };
   },
   watch: {
@@ -48,30 +57,28 @@ export default defineComponent({
         this.history = this.resources['storia'];
 
         this.loaded = true;
-      }
-    }
+      },
+    },
   },
   async mounted() {
-    this.mappings = await useMappingsStore().list()
+    this.mappings = await useMappingsStore().list();
 
-    if (!this.mappings.defaults['storia'])
-      return;
+    if (!this.mappings.defaults['storia']) return;
 
     this.history = await this.loadResource('storia');
 
-    this.bus.emit("resource:loaded", { content: this.history, resource: 'storia' });
+    this.bus.emit('resource:loaded', { content: this.history, resource: 'storia' });
   },
   methods: {
     async loadResource(res: string): Promise<Resource<UUID>[]> {
-      return loadResource(
-        this.mappings.defaults[res]!.id,
-        useResourceStore()
-      ) as Promise<Resource<UUID>[]>;
+      return loadResource(this.mappings.defaults[res]!.id, useResourceStore()) as Promise<
+        Resource<UUID>[]
+      >;
     },
   },
   setup() {
     return {
-      background: "/backgrounds/background4.webm",
+      background: '/backgrounds/background4.webm',
     };
   },
 });
