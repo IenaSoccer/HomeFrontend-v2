@@ -31,8 +31,24 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            cd ${{ secrets.DEPLOY_PATH }}
-            git fetch origin ${{ github.ref_name }}
-            git reset --hard origin/${{ github.ref_name }}
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
+            REPO_SSH_URL="git@github.com:${{ github.repository }}.git"
+            KEY_FILE="${{ secrets.DEPLOY_KEY_PATH }}"
+            mkdir -p "$HOME/.ssh"
+            chmod 700 "$HOME/.ssh"
+            test -f "$KEY_FILE"
+            chmod 600 "$KEY_FILE"
+            ssh-keyscan github.com >> "$HOME/.ssh/known_hosts"
+            chmod 644 "$HOME/.ssh/known_hosts"
+            export GIT_SSH_COMMAND="ssh -i $KEY_FILE -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+            mkdir -p "$DEPLOY_PATH"
+            cd "$DEPLOY_PATH"
+            if [ ! -d .git ]; then
+              git clone --branch "${{ github.ref_name }}" "$REPO_SSH_URL" .
+            else
+              git remote set-url origin "$REPO_SSH_URL"
+              git fetch origin "${{ github.ref_name }}"
+              git reset --hard "origin/${{ github.ref_name }}"
+            fi
             npm ci
             npm run build
