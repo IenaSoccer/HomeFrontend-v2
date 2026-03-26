@@ -43,6 +43,7 @@ jobs:
             export GIT_SSH_COMMAND="ssh -i $KEY_FILE -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
             mkdir -p "$DEPLOY_PATH"
             cd "$DEPLOY_PATH"
+            rm -rf release
             if [ ! -d .git ]; then
               git clone --branch "${{ github.ref_name }}" "$REPO_SSH_URL" release
             else
