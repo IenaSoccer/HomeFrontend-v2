@@ -50,5 +50,6 @@ jobs:
               git fetch origin "${{ github.ref_name }}"
               git reset --hard "origin/${{ github.ref_name }}"
             fi
+            cd "release"
             npm ci
             npm run build
