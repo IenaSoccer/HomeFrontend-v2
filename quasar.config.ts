@@ -31,9 +31,9 @@ export default defineConfig(() => {
 
       env: {
         PRODUCTION_API_URL: 'https://api.ienasoccer.it/api/v2/public',
-        PRODUCTION_MEDIA_URL: 'https://media.ienasoccer.it',
-        PRODUCTION_ATTACHMENTS_URL: 'https://media.ienasoccer.it',
-        PRODUCTION_PROFILE_URL: 'https://media.ienasoccer.it',
+        PRODUCTION_MEDIA_URL: 'https://media.ienasoccer.it/attachments',
+        PRODUCTION_ATTACHMENTS_URL: 'https://media.ienasoccer.it/attachments',
+        PRODUCTION_PROFILE_URL: 'https://media.ienasoccer.it/profiles',
         DEVELOPMENT_API_URL: 'http://localhost:8000/api/v2/public',
         DEVELOPMENT_MEDIA_URL: 'http://localhost/IenaSoccer/Media',
         DEVELOPMENT_ATTACHMENTS_URL: 'http://localhost/IenaSoccer/Media',
