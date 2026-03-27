@@ -1,75 +1,39 @@
 <template>
   <div v-if="loaded">
-    <div
-      class="q-pa-md pb-0 flex flex-row flex-wrap justify-start lg:justify-evenly items-center"
-      v-if="data.length > 0"
-    >
+    <div class="q-pa-md pb-0 flex flex-row flex-wrap justify-start lg:justify-evenly items-center"
+      v-if="data.length > 0">
       <div class="roboto-flex mx-4 self-start max-w-[300px] py-4">
         <div class="text-2xl text-[#f3f4f6]">
           {{ data[0]?.content.data[slide]?.data.name }}
         </div>
         <span class="text-lg font-thin text-[#f3f4f6]">{{
           data[0]?.content.data[slide]?.data.description
-        }}</span>
+          }}</span>
       </div>
       <q-carousel class="w-[700px]" swipeable animated v-model="slide" infinite>
         <template #control>
           <div class="absolute bottom-0 left-0 right-0 flex justify-between px-4 z-5">
-            <q-btn
-              round
-              dense
-              size="xl"
-              flat
-              icon="navigate_before"
-              @click="
-                slide = data[0]?.content.data?.length
-                  ? (slide - 1 + data[0]?.content.data!.length) % data[0]?.content?.data.length
-                  : 0
-              "
-              class="text-white"
-            />
-            <q-btn
-              round
-              dense
-              size="xl"
-              flat
-              icon="navigate_next"
-              @click="
-                slide = data[0]?.content.data?.length
-                  ? (slide + 1) % data[0]?.content.data!.length
-                  : 0
-              "
-              class="text-white"
-            />
+            <q-btn round dense size="xl" flat icon="navigate_before" @click="
+              slide = data[0]?.content.data?.length
+                ? (slide - 1 + data[0]?.content.data!.length) % data[0]?.content?.data.length
+                : 0
+              " class="text-white" />
+            <q-btn round dense size="xl" flat icon="navigate_next" @click="
+              slide = data[0]?.content.data?.length
+                ? (slide + 1) % data[0]?.content.data!.length
+                : 0
+              " class="text-white" />
           </div>
         </template>
-        <q-carousel-slide
-          v-for="(single, k) in data[0]?.content?.data as Attachment[]"
-          :key="single.id"
-          class="bg-dark"
-          style="padding: 0 !important"
-          :name="k"
-        >
-          <video
-            v-if="single.data.path.endsWith('.mp4')"
-            :id="'video' + single.id"
-            class="w-full z-10 h-full"
-            muted
-            controls
-          >
+        <q-carousel-slide v-for="(single, k) in data[0]?.content?.data as Attachment[]" :key="single.id" class="bg-dark"
+          style="padding: 0 !important" :name="k">
+          <video v-if="single.data.path.endsWith('.mp4')" :id="'video' + single.id" class="w-full z-10 h-full" muted
+            controls>
             <source :src="thumb(single.data.path)" type="video/mp4" />
           </video>
-          <img
-            v-else
-            :src="thumb(single.data.path)"
-            class="relative w-full h-full object-contain object-center !z-2"
-          />
-          <img
-            v-if="single.data.path.endsWith('.jpg')"
-            :src="thumb(single.data.path)"
-            class="absolute top-0 left-0 z-0 w-full h-full object-cover"
-            style="filter: blur(5px)"
-          />
+          <img v-else :src="thumb(single.data.path)" class="relative w-full h-full object-contain object-center !z-2" />
+          <img v-if="single.data.path.endsWith('.jpg')" :src="thumb(single.data.path)"
+            class="absolute top-0 left-0 z-0 w-full h-full object-cover" style="filter: blur(5px)" />
         </q-carousel-slide>
       </q-carousel>
     </div>
@@ -79,18 +43,9 @@
       </div>
     </div>
     <div class="bg-primary opacity-70 md:max-w-[30%] sm:max-w-[50%] w-full mt-12 self-end">
-      <div
-        class="flex flex-row flex-nowrap justify-evenly px-4 items-center w-full text-[#f3f4f6] roboto-flex"
-      >
-        <q-btn
-          square
-          padding="md"
-          :label="'#' + tag"
-          flat
-          v-for="(tag, i) in videos[slide]?.attributes?.tags"
-          :key="i"
-          class="text-md font-thin"
-        >
+      <div class="flex flex-row flex-nowrap justify-evenly px-4 items-center w-full text-[#f3f4f6] roboto-flex">
+        <q-btn square padding="md" :label="'#' + tag" flat v-for="(tag, i) in videos[slide]?.attributes?.tags" :key="i"
+          class="text-md font-thin">
         </q-btn>
       </div>
     </div>
@@ -151,7 +106,12 @@ export default defineComponent({
   },
   methods: {
     thumb(url: string) {
-      return `${process.env[(process.env.NODE_ENV as 'development' | 'production').toUpperCase() + '_ATTACHMENTS_URL']}/${url}`;
+      const attachmentsBase =
+        process.env.NODE_ENV === 'production'
+          ? process.env.PRODUCTION_ATTACHMENTS_URL
+          : process.env.DEVELOPMENT_ATTACHMENTS_URL;
+
+      return `${attachmentsBase}/${url}`;
     },
   },
   data() {

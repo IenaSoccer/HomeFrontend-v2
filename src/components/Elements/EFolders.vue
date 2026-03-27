@@ -21,11 +21,8 @@
       <div class="flex flex-row flex-wrap justify-start items-center">
         <div v-for="f in folders" :key="f.id">
           <q-btn @click="changeFolder(f)" flat class="h-32 w-64 m-4 border-b-4 border-blue-700">
-            <q-img
-              :src="thumbnails[f.id]?.data.path ? thumb(thumbnails[f.id]!.data.path) : ''"
-              class="absolute-full bg-cover bg-center h-full border-b-4"
-              :class="`border-[#0000ff]`"
-            >
+            <q-img :src="thumbnails[f.id]?.data.path ? thumb(thumbnails[f.id]!.data.path) : ''"
+              class="absolute-full bg-cover bg-center h-full border-b-4" :class="`border-[#0000ff]`">
               <div class="text-subtitle2 flex h-full w-full flex-col flex-center">
                 <q-icon name="folder" class="block" size="sm"></q-icon>
                 <div class="font-thin">{{ f.name }}</div>
@@ -78,9 +75,12 @@ export default defineComponent({
       this.bus.emit('change-folder', f);
     },
     thumb(url: string) {
-      return `${process.env[(process.env.NODE_ENV as 'development' | 'production').toUpperCase() + '_ATTACHMENTS_URL']}${
-        process.env.NODE_ENV === 'production' ? '/800/' : '/'
-      }${url}`;
+      const attachmentsBase =
+        process.env.NODE_ENV === 'production'
+          ? process.env.PRODUCTION_ATTACHMENTS_URL
+          : process.env.DEVELOPMENT_ATTACHMENTS_URL;
+
+      return `${attachmentsBase}${process.env.NODE_ENV === 'production' ? '/800/' : '/'}${url}`;
     },
   },
   data() {

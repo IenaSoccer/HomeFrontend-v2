@@ -2,10 +2,7 @@
   <div class="text-3xl text-dark p-8 font-bold roboto-flex">Ti potrebbe interessare</div>
   <div v-if="loaded" class="text-xl text-dark p-8">
     <div v-if="news && news.length > 1">
-      <div
-        v-for="n in shuffleArray(news.filter((x) => x.id !== currentPostId)).slice(0, 3)"
-        :key="n.id"
-      >
+      <div v-for="n in shuffleArray(news.filter((x) => x.id !== currentPostId)).slice(0, 3)" :key="n.id">
         <q-btn flat :to="`/post/${n.id}/${slugify(n.name)}`">
           <q-card flat class="w-[256px] cursor-pointer w-full h-full select-none">
             <q-img height="256px" width="256px" :src="thumb((n.thumbnail as Attachment).data.path)">
@@ -46,7 +43,7 @@ export default defineComponent({
       required: true,
     },
   },
-  setup() {},
+  setup() { },
   data() {
     return {
       mappings: {} as Mappings,
@@ -75,7 +72,12 @@ export default defineComponent({
       return array;
     },
     thumb(url: string) {
-      return `${process.env[(process.env.NODE_ENV as 'development' | 'production').toUpperCase() + '_ATTACHMENTS_URL']}/${url}`;
+      const attachmentsBase =
+        process.env.NODE_ENV === 'production'
+          ? process.env.PRODUCTION_ATTACHMENTS_URL
+          : process.env.DEVELOPMENT_ATTACHMENTS_URL;
+
+      return `${attachmentsBase}/${url}`;
     },
     slugify(str: string) {
       return String(str)
@@ -97,7 +99,7 @@ export default defineComponent({
       risorse.forEach((n) => {
         downloadAttachments(n)
           .then((r) => this.news.push(r as Resource<Attachment>))
-          .catch(() => {});
+          .catch(() => { });
       });
       return this.news;
     },

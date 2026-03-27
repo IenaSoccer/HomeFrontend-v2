@@ -4,8 +4,13 @@
 import axios from 'axios';
 import { useCacheStore } from 'src/stores/Cache';
 
+const apiBaseURL =
+  process.env.NODE_ENV === 'production'
+    ? process.env.PRODUCTION_API_URL
+    : process.env.DEVELOPMENT_API_URL;
+
 const api = axios.create({
-  baseURL: `${process.env[`${(process.env.NODE_ENV as 'development' | 'production').toUpperCase()}_API_URL`]}`,
+  baseURL: apiBaseURL,
 });
 
 const DEFAULT_TTL = 60_000;

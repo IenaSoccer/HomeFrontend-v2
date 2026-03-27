@@ -8,11 +8,8 @@
           </h1>
 
           <div class="py-4" v-if="post.thumbnail">
-            <q-img
-              :src="thumb((post.thumbnail as Attachment).data.path)"
-              class="w-full h-[700px] shadow"
-              img-class="object-cover"
-            >
+            <q-img :src="thumb((post.thumbnail as Attachment).data.path)" class="w-full h-[700px] shadow"
+              img-class="object-cover">
             </q-img>
           </div>
           <div class="flex flex-row justify-between flex-wrap items-center pb-4">
@@ -36,12 +33,8 @@
           <WRelatedPosts :currentPostId="post.id" />
         </div>
       </div>
-      <WShare
-        class="py-8 md:w-[33%] w-full md:px-0 px-4"
-        :url="computedUrl(post.id, slugify(post.name))"
-        :title="post.name"
-        :thumb="computedThumb((post.thumbnail as Attachment).data.path)"
-      />
+      <WShare class="py-8 md:w-[33%] w-full md:px-0 px-4" :url="computedUrl(post.id, slugify(post.name))"
+        :title="post.name" :thumb="computedThumb((post.thumbnail as Attachment).data.path)" />
     </div>
     <div v-else class="flex flex-row justify-center items-center h-[400px]">
       <div class="select-none font-bold text-4xl text-dark roboto-flex">Post non esistente</div>
@@ -91,9 +84,12 @@ export default defineComponent({
         .replace(/-+/g, '-');
     },
     thumb(url: string) {
-      return `${process.env[(process.env.NODE_ENV as 'development' | 'production').toUpperCase() + '_ATTACHMENTS_URL']}${
-        process.env.NODE_ENV === 'production' ? '/1280/' : '/'
-      }${url}`;
+      const attachmentsBase =
+        process.env.NODE_ENV === 'production'
+          ? process.env.PRODUCTION_ATTACHMENTS_URL
+          : process.env.DEVELOPMENT_ATTACHMENTS_URL;
+
+      return `${attachmentsBase}${process.env.NODE_ENV === 'production' ? '/1280/' : '/'}${url}`;
     },
   },
   data() {
