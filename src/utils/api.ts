@@ -9,6 +9,10 @@ const apiBaseURL =
     ? process.env.PRODUCTION_API_URL
     : process.env.DEVELOPMENT_API_URL;
 
+if (!apiBaseURL) {
+  throw new Error('Missing API base URL env var for current NODE_ENV');
+}
+
 const api = axios.create({
   baseURL: apiBaseURL,
 });
