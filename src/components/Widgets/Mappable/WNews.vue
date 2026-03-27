@@ -18,7 +18,7 @@
       </div>
     </q-intersection>
     <div v-else class="flex flex-row justify-center items-center h-[400px]">
-      <div class="select-none font-thin text-xl text-dark roboto-flex">Non ci sono contenuti</div>
+      <div class="select-none font-bold text-4xl text-dark roboto-flex">Non ci sono contenuti</div>
     </div>
   </div>
   <div v-else class="flex flex-row justify-center items-center m-8">

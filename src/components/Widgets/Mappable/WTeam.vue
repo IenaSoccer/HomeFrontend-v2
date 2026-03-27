@@ -8,10 +8,10 @@
               <q-item-section class="text-[#f3f4f6] text-lg font-thin roboto-flex px-8">
                 <q-item-label class="text-[#f3f4f6] text-lg font-thin roboto-flex" caption>{{
                   s.name
-                  }}</q-item-label>
+                }}</q-item-label>
                 <q-item-label class="text-[#f3f4f6] text-md" caption>{{
                   s.description
-                  }}</q-item-label>
+                }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
@@ -29,7 +29,7 @@
         </div>
       </div>
       <div v-else class="flex flex-row justify-center items-center h-[400px]">
-        <div class="select-none font-thin text-xl text-[#f3f4f6] roboto-flex">
+        <div class="select-none font-bold text-4xl text-[#f3f4f6] roboto-flex">
           Non ci sono contenuti
         </div>
       </div>
