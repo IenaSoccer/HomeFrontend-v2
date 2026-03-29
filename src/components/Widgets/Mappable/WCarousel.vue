@@ -4,7 +4,7 @@
       <q-carousel v-model="slide" transition-prev="slide-right" transition-next="slide-left" swipeable animated v-cloak
         infinite control-color="white" padding arrows height="600px" class="bg-dark text-[#f3f4f6]">
         <q-carousel-slide v-for="s in data.content.data" :key="s.id" :name="s.id" class="p-0"
-          :class="{ 'bg-contain bg-no-repeat': mantainAspectRatio }"
+          :class="{ 'bg-contain bg-no-repeat': mantainAspectRatio, 'lg:bg-contain bg-no-repeat': true }"
           :img-src="s.data.path && s.data.path.endsWith('.jpg') ? thumb(s.data.path) : ''">
           <q-video v-if="s.data.path ? s.data.path.endsWith('.mp4') : false" :src="thumb(s.data.path)" :ratio="16 / 9"
             class="absolute-full w-full h-full z-0">

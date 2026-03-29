@@ -68,7 +68,7 @@ export default defineComponent({
   },
   methods: {
     computedUrl(id: UUID, slug: string) {
-      return window.location.origin + '/#/post/' + id + '/' + slug;
+      return window.location.origin + '/post/' + id + '/' + slug;
     },
     computedThumb(thumb: string) {
       return window.location.origin + thumb;
