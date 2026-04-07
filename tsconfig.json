@@ -4,7 +4,6 @@
     "baseUrl": ".",
     "noImplicitAny": false,
     "paths": {
-      "#q-app/*": ["src/*"],
       "#components/*": ["src/components/*"],
       "#layouts/*": ["src/layouts/*"],
       "#pages/*": ["src/pages/*"],
@@ -15,9 +14,11 @@
   "include": [
     ".quasar/**/*.ts",
     ".quasar/**/*.d.ts",
+    "quasar.config.ts",
     "src/**/*.ts",
     "src/**/*.d.ts",
-    "src/**/*.vue"
+    "src/**/*.vue",
+    "src-ssr/**/*.ts"
   ],
   "typeRoots": ["./node_modules/@types", "./.quasar"]
 }

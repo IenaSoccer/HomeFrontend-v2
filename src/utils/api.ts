@@ -19,10 +19,17 @@ const api = axios.create({
 
 const DEFAULT_TTL = 60_000;
 
+function getCacheKey(config: { method?: string; url?: string; baseURL?: string; params?: unknown }) {
+  const method = (config.method ?? 'get').toUpperCase();
+  const requestUrl = api.getUri(config);
+
+  return `${method}:${requestUrl}`;
+}
+
 api.interceptors.request.use((config) => {
   const cacheStore = useCacheStore();
 
-  const key = `${config.method}:${config.url}`;
+  const key = getCacheKey(config);
 
   const cached = cacheStore.get<any>(key);
   if (cached) {
@@ -39,7 +46,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => {
     const cacheStore = useCacheStore();
-    const key = `${response.config.method}:${response.config.url}`;
+    const key = getCacheKey(response.config);
 
     cacheStore.set(key, response.data, DEFAULT_TTL);
 

@@ -69,7 +69,9 @@ export default defineConfig(() => {
       iconSet: 'fontawesome-v6',
       lang: 'en-US',
 
-      plugins: [],
+      plugins: [
+        'Meta',
+      ],
     },
 
     // https://v2.quasar.dev/options/animations
