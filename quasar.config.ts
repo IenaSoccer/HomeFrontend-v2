@@ -1,4 +1,5 @@
 import { defineConfig } from '#q-app/wrappers';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(() => {
   return {
@@ -15,6 +16,10 @@ export default defineConfig(() => {
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
+      extendViteConf(viteConf) {
+        viteConf.plugins ??= [];
+        viteConf.plugins.push(...tailwindcss());
+      },
       target: {
         browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
         node: 'node20',
