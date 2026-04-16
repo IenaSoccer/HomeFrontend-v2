@@ -50,10 +50,10 @@ export default defineComponent({
     mappings: {
       immediate: true,
       deep: true,
-      async handler(n: Mappings, o: Mappings) {
-        if (!n || n === o) return;
+      async handler(n: Mappings) {
+        if (!n || !n.defaults || !n.defaults['storia']) return;
 
-        this.resources['storia'] = await this.ensureResource(n.defaults['storia']!.id, 'storia');
+        this.resources['storia'] = await this.ensureResource(n.defaults['storia'].id, 'storia');
         this.history = this.resources['storia'];
 
         this.loaded = true;

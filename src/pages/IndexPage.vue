@@ -122,8 +122,8 @@ export default defineComponent({
     mappings: {
       immediate: true,
       deep: true,
-      async handler(n: Mappings, o: Mappings) {
-        if (!n || n === o) return;
+      async handler(n: Mappings) {
+        if (!n || !n.defaults || Object.keys(n.defaults).length === 0) return;
 
         await Promise.all(
           Object.entries(n.defaults).map(async ([key, value]) => {

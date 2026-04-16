@@ -29,8 +29,8 @@ export default defineComponent({
     mappings: {
       immediate: true,
       deep: true,
-      async handler(n: Mappings, o: Mappings) {
-        if (!n || n === o) return;
+      async handler(n: Mappings) {
+        if (!n || !n.custom) return;
 
         this.page.folders = await this.loadFolderWithHash(
           this.$route.params.fid as UUID,

@@ -10,8 +10,7 @@ module.exports = {
     {
       name: appName,
       cwd: currentPath,
-      script: './node_modules/@quasar/app-vite/bin/quasar.js',
-      args: ['serve', '-m', 'ssr', 'dist/ssr', '--port', port],
+      script: './dist/ssr/index.js',
       interpreter: 'node',
       exec_mode: 'cluster',
       instances,
@@ -26,6 +25,7 @@ module.exports = {
       error_file: path.join(currentPath, 'logs', 'pm2-error.log'),
       env: {
         NODE_ENV: 'production',
+        PORT: port,
         SSR_PORT: port,
       },
     },

@@ -24,8 +24,8 @@ export default defineComponent({
     mappings: {
       immediate: true,
       deep: true,
-      async handler(n: Mappings, o: Mappings) {
-        if (!n || n === o) return;
+      async handler(n: Mappings) {
+        if (!n || !n.defaults || !n.defaults['news']) return;
 
         void (await this.loadResource());
       },

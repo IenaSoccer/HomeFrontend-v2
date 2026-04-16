@@ -23,8 +23,8 @@ export default defineComponent({
     mappings: {
       immediate: true,
       deep: true,
-      async handler(n: Mappings, o: Mappings) {
-        if (!n || n === o) return;
+      async handler(n: Mappings) {
+        if (!n || !n.defaults) return;
 
         if (!n.defaults['galleria']) {
           this.loaded = true;

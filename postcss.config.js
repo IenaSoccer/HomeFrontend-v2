@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/postcss';
 
 export default {
   plugins: [
+    tailwindcss(),
     // https://github.com/postcss/autoprefixer
     autoprefixer({
       overrideBrowserslist: [
@@ -18,6 +19,5 @@ export default {
         'last 4 iOS versions',
       ],
     }),
-    tailwindcss(),
   ],
 };
