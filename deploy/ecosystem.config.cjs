@@ -10,7 +10,7 @@ module.exports = {
     {
       name: appName,
       cwd: currentPath,
-      script: './dist/ssr/index.js',
+      script: '../dist/ssr/index.js',
       interpreter: 'node',
       exec_mode: 'cluster',
       instances,
