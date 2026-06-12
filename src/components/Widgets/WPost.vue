@@ -40,7 +40,7 @@
       <div class="select-none font-bold text-4xl text-dark roboto-flex">Post non esistente</div>
     </div>
   </div>
-  <div v-else class="flex flex-row justify-center items-center">
+  <div v-else class="flex flex-row justify-center items-center my-8">
     <q-spinner color="primary" size="10em" :thickness="10"></q-spinner>
   </div>
 </template>
@@ -64,6 +64,15 @@ export default defineComponent({
     post: {
       type: {} as () => Resource<Attachment, string>,
       required: true,
+    },
+  },
+  watch: {
+    post: {
+      immediate: true,
+      handler(n: Resource<Attachment, string>) {
+        if(n.id)
+          this.loaded = true;
+      },
     },
   },
   methods: {
@@ -96,7 +105,7 @@ export default defineComponent({
     return {
       bus: inject('bus') as EventBus,
       data: {} as Resource<Attachment>,
-      loaded: true,
+      loaded: false,
     };
   },
 });

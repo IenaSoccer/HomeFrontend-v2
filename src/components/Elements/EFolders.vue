@@ -33,7 +33,7 @@
       </div>
     </q-intersection>
     <div v-else class="flex flex-row justify-center items-center h-[400px]">
-      <div class="font-bold text-4xl text-dark roboto-flex">Non ci sono contenuti</div>
+      <div class="font-bold text-4xl text-dark roboto-flex select-none">Non ci sono contenuti</div>
     </div>
   </div>
   <div v-else class="flex flex-row justify-center items-center m-8">
@@ -57,12 +57,18 @@ export default defineComponent({
       required: true,
     },
   },
-  async mounted() {
-    await Promise.all(
-      this.folders.map((folder: Resource<UUID>) => {
-        void this.useThumbnail(folder);
-      }),
-    );
+  watch: {
+    folders: {
+      immediate: true,
+      async handler(n: Resource<UUID>[]) {
+        await Promise.all(
+          n.map((folder: Resource<UUID>) => {
+            void this.useThumbnail(folder);
+          }),
+        );
+        this.loaded = true;
+      },
+    },
   },
   methods: {
     async useThumbnail(f: Resource<UUID>) {
@@ -86,7 +92,7 @@ export default defineComponent({
   data() {
     return {
       bus: inject('bus') as EventBus,
-      loaded: true,
+      loaded: false,
       thumbnails: {} as Record<string, Attachment>,
     };
   },

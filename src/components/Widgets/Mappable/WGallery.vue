@@ -45,30 +45,27 @@ export default defineComponent({
     EAlbum,
     EFolders,
   },
-  async mounted() {
+  mounted() {
     this.loaded = false;
 
     this.bus.on('change-folder', (f: Resource<UUID>) => {
       this.selected = f;
     });
-
-    if (!this.folders || this.folders.length === 0) {
-      this.loaded = true;
-      return;
-    }
-
-    await Promise.all(
-      this.folders.map((folder: Resource<UUID>) => {
-        this.album.push(folder);
-      }),
-    );
-
-    this.loaded = true;
   },
   props: {
     folders: {
       type: {} as () => Resource<UUID>[],
       required: true,
+    },
+  },
+  watch: {
+    folders: {
+      immediate: true,
+      handler(n: Resource<UUID>[]) {
+        this.album = n;
+        if (n.length > 0)
+          this.loaded = true;
+      }
     },
   },
   data() {

@@ -6,7 +6,7 @@
   </q-page>
 </template>
 <script lang="ts">
-import { defineComponent, inject, reactive } from 'vue';
+import { defineComponent, inject } from 'vue';
 import WGallery from 'src/components/Widgets/Mappable/WGallery.vue';
 
 import type { EventBus } from 'quasar';
@@ -48,9 +48,9 @@ export default defineComponent({
   data() {
     return {
       bus: inject('bus') as EventBus,
-      resources: reactive(inject('data') as Record<string, Resource<UUID>[]>),
+      resources: inject('data') as Record<string, Resource<UUID>[]>,
       selectedAlbum: {} as Resource<UUID>,
-      mappings: reactive(inject('mappings') as Mappings),
+      mappings: inject('mappings') as Mappings,
       loaded: false,
       ensureResource: inject('ensureResource') as (
         uuid: UUID,

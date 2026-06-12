@@ -1,6 +1,6 @@
 <template>
-  <q-page>
-    <div class="bg-contact bg-cover">
+  <q-page class="w-full h-full bg-contact bg-cover">
+    <div class="bg-contact bg-cover shadow-none w-full h-full flex flex-row justify-center items-center">
       <WContact />
     </div>
   </q-page>
@@ -8,6 +8,7 @@
 <style scoped>
 .bg-contact {
   background: url('/backgrounds/background5.jpg') no-repeat top left;
+  opacity: 0.9;
 }
 </style>
 <script lang="ts">

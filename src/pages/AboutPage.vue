@@ -7,7 +7,10 @@
       loop
       muted
     ></video>
-    <WTimeline :history="history" />
+    <WTimeline v-if="loaded" :history="history" />
+    <div v-else class="flex flex-row justify-center items-center my-8">
+      <q-spinner color="primary" size="10em" :thickness="10"></q-spinner>
+    </div>
   </q-page>
 </template>
 <style scoped>

@@ -1,50 +1,37 @@
 <template>
-  <div class="py-16 flex flex-row flex-wrap justify-center items-center select-none">
-    <div class="m-4 grid grid-cols-2 gap-4 grid-rows-2">
-      <q-btn
-        outline
-        square
-        href="tel:+393392176344"
-        text-color="blue"
-        class="md:w-[200px] z-10 md:h-[200px] bg-[#f3f4f6] rounded-none shadow-none text-center"
-        icon="phone"
-        size="70px"
-      />
-      <q-btn
-        outline
-        square
-        href="https://goo.gl/maps/z7AhbyLRAB1RUdr97"
-        text-color="orange"
-        class="md:w-[200px] z-10 md:h-[200px] bg-[#f3f4f6] rounded-none shadow-none text-center"
-        icon="location_on"
-        size="70px"
-      />
-      <q-btn
-        outline
-        href="mailto:asdienasocceracademy@libero.it"
-        square
-        text-color="green"
-        class="col-span-2 z-10 md:h-[200px] bg-[#f3f4f6] rounded-none shadow-none text-center"
-        icon="email"
-        size="70px"
-      />
-    </div>
-
-    <q-card
-      class="lg:w-[700px] md:w-[500px] w-full mx-2 md:mx-0 px-8 rounded-none border-none bg-[#f3f4f6]"
-    >
-      <q-card-section>
-        <div class="roboto-flex font-bold text-5xl text-center text-dark py-8">Contattaci</div>
-        <div class="roboto-flex leading-tight text-xl font-light">
-          Contattaci attraverso i canali di comunicazione presenti in questa pagina:
-          <ul class="leading-tight py-4">
-            <li class="font-bold text-blue-500">Numero di telefono (preferibile)</li>
-            <li class="font-bold text-green-500">Email</li>
-          </ul>
+  <q-card class="w-full h-full m-8 border-none bg-gradient-to-br from-[#f3f4f6] to-[#e5e7eb] shadow-lg rounded-xl card-hover">
+    <q-card-section>
+      <div class="roboto-flex font-bold text-5xl text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent py-8 title-slide-in select-none">Contattaci</div>
+      <div class="roboto-flex leading-tight text-xl font-light text-gray-600 text-center subtitle-fade-in select-none">
+        Contattaci attraverso i canali di comunicazione presenti in questa pagina.
+      </div>
+    </q-card-section>
+    <q-separator class="separator-glow" />
+    <q-card-section>
+      <div class="flex flex-row items-center py-4 contact-item hover-lift">
+        <q-icon name="email" size="2em" color="primary" class="icon-bounce" />
+        <div class="roboto-flex text-lg font-light text-gray-700 ml-4">
+          <a href="mailto:asdienasocceracademy@libero.it" class="link-hover">asdienasocceracademy@libero.it</a>
         </div>
-      </q-card-section>
-    </q-card>
-  </div>
+      </div>
+    </q-card-section>
+    <q-card-section>
+      <div class="flex flex-row items-center py-4 contact-item hover-lift">
+        <q-icon name="phone" size="2em" color="primary" class="icon-bounce" />
+        <div class="roboto-flex text-lg font-light text-gray-700 ml-4">
+          <a href="tel:+393392176344" class="link-hover">+39 339 2176 344</a>
+        </div>
+      </div>
+    </q-card-section>
+    <q-card-section>
+      <div class="flex flex-row items-center py-4 contact-item hover-lift">
+        <q-icon name="place" size="2em" color="primary" class="icon-bounce" />
+        <div class="roboto-flex text-lg font-light text-gray-700 ml-4">
+          <a href="https://goo.gl/maps/z7AhbyLRAB1RUdr97" target="_blank" class="link-hover">https://goo.gl/maps/z7AhbyLRAB1RUdr97</a>
+        </div>
+      </div>
+    </q-card-section>
+  </q-card>
 </template>
 <style scoped>
 .soccer-league {
@@ -60,6 +47,6 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
   name: 'WContact',
-  setup() {},
+  setup() { },
 });
 </script>
