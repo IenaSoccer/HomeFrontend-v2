@@ -46,8 +46,6 @@ export default defineComponent({
     EFolders,
   },
   mounted() {
-    this.loaded = false;
-
     this.bus.on('change-folder', (f: Resource<UUID>) => {
       this.selected = f;
     });
@@ -63,8 +61,7 @@ export default defineComponent({
       immediate: true,
       handler(n: Resource<UUID>[]) {
         this.album = n;
-        if (n.length > 0)
-          this.loaded = true;
+        this.loaded = true;
       }
     },
   },

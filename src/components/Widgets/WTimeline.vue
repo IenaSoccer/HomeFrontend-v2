@@ -5,7 +5,7 @@
         <WCarousel :carousel="carousel" :current-slide="0" />
       </q-card>
     </q-dialog>
-    <div class="flex flex-col flex-nowrap justify-center items-center coolvetica">
+    <div class="flex flex-col flex-nowrap justify-center items-center roboto-flex">
       <div class="q-px-lg q-py-md select-none">
         <q-timeline v-if="resources" :layout="layout" color="secondary">
           <q-timeline-entry tag="h3" class="font-bold text-4xl tenada" heading>
@@ -24,13 +24,13 @@
             :side="k % 2 === 0 ? 'right' : 'left'"
           >
             <div
-              class="transition transition-all hover:text-[#f3f4f6] text-lg font-normal coolvetica"
+              class="transition transition-all hover:text-[#f3f4f6] text-lg font-light leading-none"
             >
               {{ single.description }}
             </div>
             <template #title>
               <div class="flex flex-row justify-end items-center">
-                <h4 class="text-2xl font-bold transition transition-all hover:text-[#f3f4f6]">
+                <h4 class="text-3xl font-bold transition transition-all hover:text-[#f3f4f6] coolvetica">
                   {{ single.name }}
                 </h4>
                 <q-btn
