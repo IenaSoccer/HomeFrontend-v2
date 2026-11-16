@@ -11,6 +11,7 @@
  */
 import { randomBytes } from 'node:crypto';
 import type { Server } from 'node:http';
+import { join } from 'node:path';
 import express from 'express';
 import type { Application, Request, Response } from 'express';
 import {
@@ -71,6 +72,27 @@ export const create = defineSsrCreate(async (/* { ... } */) => {
     const { default: compression } = await import('compression');
     app.use(compression());
   }
+
+  const deploymentFile = join(import.meta.dirname, 'client', 'deployment.json');
+  app.get('/deployment.json', (_req, res) => {
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+      'Content-Type': 'application/json; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff',
+    });
+
+    res.sendFile(deploymentFile, (error) => {
+      if (!error) return;
+
+      if (res.headersSent) {
+        res.end();
+        return;
+      }
+
+      const statusCode = 'code' in error && error.code === 'ENOENT' ? 404 : 500;
+      res.status(statusCode).json({ error: 'Deployment metadata unavailable' });
+    });
+  });
 
   return app;
 });

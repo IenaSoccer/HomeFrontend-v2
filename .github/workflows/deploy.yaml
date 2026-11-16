@@ -11,6 +11,10 @@ concurrency:
   group: deploy-${{ github.ref_name }}
   cancel-in-progress: false
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   deploy:
     runs-on: ubuntu-24.04
@@ -20,21 +24,14 @@ jobs:
       PM2_APP_NAME: iena-homefrontend
       PM2_INSTANCES: '2'
       SSR_PORT: '3000'
-      SSH_HOST: ${{ secrets.SSH_HOST }}
-      SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
-      SSH_USER: ${{ secrets.USERNAME }}
-      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      RELEASE_ID: ${{ github.sha }}-${{ github.run_attempt }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22.23.5'
           cache: npm
@@ -43,11 +40,10 @@ jobs:
             src-ssr/package-lock.json
             deploy/ssr-package-lock.json
 
-      - name: Pin npm
-        run: npm install --global npm@10.9.4 --ignore-scripts
-
-      - name: Verify and build once
+      - name: Verify and package
         run: |
+          set -Eeuo pipefail
+          npm install --global npm@10.9.4 --ignore-scripts
           npm ci --ignore-scripts
           npm --prefix src-ssr ci --ignore-scripts
           npm run postinstall
@@ -56,280 +52,199 @@ jobs:
           npm --prefix src-ssr audit --omit=dev --audit-level=high
           npm run build:ssr
 
-      - name: Assemble immutable release
-        shell: bash
-        run: |
-          set -euo pipefail
           mkdir -p dist/ssr/deploy
-          cp deploy/ecosystem.config.cjs dist/ssr/deploy/ecosystem.config.cjs
+          cp deploy/ecosystem.config.cjs dist/ssr/deploy/
           cp deploy/ssr-package-lock.json dist/ssr/package-lock.json
           printf '{"commit":"%s","run_id":"%s"}\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" \
             > dist/ssr/client/deployment.json
           npm --prefix dist/ssr ci --omit=dev --ignore-scripts --no-audit --no-fund
           npm --prefix dist/ssr audit --omit=dev --audit-level=high
-          tar -C dist/ssr -czf "release-${GITHUB_SHA}.tgz" .
-          sha256sum "release-${GITHUB_SHA}.tgz" > "release-${GITHUB_SHA}.tgz.sha256"
+          tar -C dist/ssr -czf "$RUNNER_TEMP/release.tgz" .
 
-      - name: Configure verified SSH host
-        shell: bash
+      - name: Configure SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          SSH_USER: ${{ secrets.USERNAME }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           set -Eeuo pipefail
-
-          fail() {
-            echo "::error::$1" >&2
-            exit 1
-          }
-
-          [[ -n "$SSH_HOST" ]] || fail "Missing SSH_HOST secret"
-          [[ -n "$SSH_USER" ]] || fail "Missing USERNAME secret"
-          [[ -n "$DEPLOY_PATH" ]] || fail "Missing DEPLOY_PATH secret"
-          [[ -n "$SSH_PRIVATE_KEY" ]] || fail "Missing SSH_PRIVATE_KEY secret"
-          [[ -n "$SSH_KNOWN_HOSTS" ]] || fail "Missing SSH_KNOWN_HOSTS secret"
-          [[ "$SSH_HOST" =~ ^[A-Za-z0-9.-]+$ ]] || fail "SSH_HOST has an invalid format"
-          [[ "$SSH_PORT" =~ ^[0-9]{1,5}$ ]] || fail "SSH_PORT has an invalid format"
-          (( SSH_PORT >= 1 && SSH_PORT <= 65535 )) || fail "SSH_PORT is out of range"
-          [[ "$SSH_USER" =~ ^[A-Za-z_][A-Za-z0-9_-]*$ ]] ||
-            fail "USERNAME contains unsupported characters"
-          [[ "$DEPLOY_PATH" =~ ^/[A-Za-z0-9._/-]+$ ]] ||
-            fail "DEPLOY_PATH must be an absolute Unix path"
-          [[ "$DEPLOY_PATH" != *".."* && "$DEPLOY_PATH" != "/" ]] ||
-            fail "DEPLOY_PATH is unsafe"
+          : "${SSH_HOST:?Missing SSH_HOST secret}"
+          : "${SSH_USER:?Missing USERNAME secret}"
+          : "${SSH_KEY:?Missing SSH_PRIVATE_KEY secret}"
+          : "${SSH_KNOWN_HOSTS:?Missing SSH_KNOWN_HOSTS secret}"
+          : "${DEPLOY_PATH:?Missing DEPLOY_PATH secret}"
+          [[ "$SSH_HOST" =~ ^[A-Za-z0-9.-]+$ ]]
+          [[ "$SSH_PORT" =~ ^[0-9]{1,5}$ ]] && (( SSH_PORT >= 1 && SSH_PORT <= 65535 ))
+          [[ "$SSH_USER" =~ ^[A-Za-z_][A-Za-z0-9_-]*$ ]]
+          [[ "$DEPLOY_PATH" =~ ^/[A-Za-z0-9._/-]+$ && "$DEPLOY_PATH" != *".."* && "$DEPLOY_PATH" != / ]]
 
           install -d -m 700 "$HOME/.ssh"
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$SSH_KEY" | tr -d '\r' > "$HOME/.ssh/deploy_key"
           printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/known_hosts.source"
           chmod 600 "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts.source"
-
-          ssh-keygen -y -P '' -f "$HOME/.ssh/deploy_key" >/dev/null 2>&1 ||
-            fail "SSH_PRIVATE_KEY is invalid, encrypted, or not a private key"
-          ssh-keygen -l -f "$HOME/.ssh/known_hosts.source" >/dev/null 2>&1 ||
-            fail "SSH_KNOWN_HOSTS must contain ssh-keyscan output"
-
-          awk '
-            $1 !~ /^#/ && NF >= 3 && $2 ~ /^(ssh-|ecdsa-|sk-)/ {
-              print "ienavps-home", $2, $3
-            }
-          ' "$HOME/.ssh/known_hosts.source" > "$HOME/.ssh/known_hosts"
+          ssh-keygen -y -P '' -f "$HOME/.ssh/deploy_key" >/dev/null
+          awk '$1 !~ /^#/ && NF >= 3 && $2 ~ /^(ssh-|ecdsa-|sk-)/ {
+            print "ienavps-home", $2, $3
+          }' "$HOME/.ssh/known_hosts.source" > "$HOME/.ssh/known_hosts"
+          ssh-keygen -F ienavps-home -f "$HOME/.ssh/known_hosts" >/dev/null
           chmod 600 "$HOME/.ssh/known_hosts"
-          ssh-keygen -F ienavps-home -f "$HOME/.ssh/known_hosts" >/dev/null ||
-            fail "SSH_KNOWN_HOSTS contains no supported OpenSSH host key"
 
-          {
-            printf 'Host ienavps-home\n'
-            printf '  HostName %s\n' "$SSH_HOST"
-            printf '  Port %s\n' "$SSH_PORT"
-            printf '  User %s\n' "$SSH_USER"
-            printf '  IdentityFile %s\n' "$HOME/.ssh/deploy_key"
-            printf '  UserKnownHostsFile %s\n' "$HOME/.ssh/known_hosts"
-            printf '  HostKeyAlias ienavps-home\n'
-            printf '  IdentitiesOnly yes\n'
-            printf '  BatchMode yes\n'
-            printf '  StrictHostKeyChecking yes\n'
-            printf '  ConnectTimeout 15\n'
-            printf '  LogLevel ERROR\n'
-          } > "$HOME/.ssh/config"
+          cat > "$HOME/.ssh/config" <<SSH_CONFIG
+          Host ienavps-home
+            HostName $SSH_HOST
+            Port $SSH_PORT
+            User $SSH_USER
+            IdentityFile $HOME/.ssh/deploy_key
+            UserKnownHostsFile $HOME/.ssh/known_hosts
+            HostKeyAlias ienavps-home
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking yes
+            ConnectTimeout 15
+            LogLevel ERROR
+          SSH_CONFIG
           chmod 600 "$HOME/.ssh/config"
 
-      - name: Upload release
-        shell: bash
+      - name: Activate release
+        id: activate
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           set -Eeuo pipefail
-          ssh ienavps-home bash -s -- "$DEPLOY_PATH" <<'REMOTE'
+          checksum="$(sha256sum "$RUNNER_TEMP/release.tgz" | awk '{ print $1 }')"
+          ssh ienavps-home "mkdir -p -- '$DEPLOY_PATH/incoming' '$DEPLOY_PATH/releases'"
+          scp "$RUNNER_TEMP/release.tgz" "ienavps-home:$DEPLOY_PATH/incoming/$RELEASE_ID.tgz"
+
+          ssh ienavps-home bash -s -- "$DEPLOY_PATH" "$RELEASE_ID" "$checksum" \
+            "$PM2_APP_NAME" "$PM2_INSTANCES" "$SSR_PORT" <<'REMOTE'
           set -Eeuo pipefail
-          deploy_path="$1"
-          mkdir -p -- "$deploy_path/incoming" "$deploy_path/releases"
-          REMOTE
-          scp "release-${GITHUB_SHA}.tgz" "release-${GITHUB_SHA}.tgz.sha256" \
-            "ienavps-home:$DEPLOY_PATH/incoming/"
+          deploy_path="$1"; release_id="$2"; checksum="$3"
+          app_name="$4"; instances="$5"; port="$6"
+          [[ "$deploy_path" =~ ^/[A-Za-z0-9._/-]+$ && "$deploy_path" != *".."* && "$deploy_path" != / ]]
+          [[ "$release_id" =~ ^[0-9a-f]{40}-[0-9]+$ ]]
+          [[ "$instances" =~ ^[1-9][0-9]*$ ]]
+          [[ "$port" =~ ^[0-9]{1,5}$ ]] && (( port >= 1 && port <= 65535 ))
 
-      - name: Activate, verify and roll back on failure
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          ssh ienavps-home bash -s -- \
-            "$DEPLOY_PATH" "$GITHUB_SHA" "$PM2_APP_NAME" "$PM2_INSTANCES" "$SSR_PORT" "$GITHUB_RUN_ATTEMPT" <<'REMOTE'
-          set -Eeuo pipefail
+          archive="$deploy_path/incoming/$release_id.tgz"
+          releases="$deploy_path/releases"
+          release="$releases/$release_id"
+          current="$deploy_path/current"
+          previous="$deploy_path/previous"
+          old="$(readlink -f "$current" 2>/dev/null || true)"
 
-          fail() {
-            echo "::error::SSR release activation failed: $1" >&2
-            exit 1
-          }
+          test -f "$archive"
+          test "$(sha256sum "$archive" | awk '{ print $1 }')" = "$checksum"
+          test ! -e "$release"
+          mkdir -p -- "$release/logs"
+          tar -xzf "$archive" -C "$release"
+          rm -f -- "$archive"
+          test -f "$release/index.js"
+          test -f "$release/deploy/ecosystem.config.cjs"
+          metadata="$release/client/deployment.json"
+          test -f "$metadata"
+          node -e 'const [f,c]=process.argv.slice(1); if(require(f).commit!==c) process.exit(1)' \
+            "$metadata" "${release_id%%-*}"
 
-          deploy_path="$1"
-          release_sha="$2"
-          app_name="$3"
-          instances="$4"
-          port="$5"
-          run_attempt="$6"
+          test -z "$old" || test ! -d "$old" || ln -sfn "$old" "$previous"
+          next="$deploy_path/.current-$release_id"
+          rm -f -- "$next"
+          ln -s "$release" "$next"
+          mv -Tf -- "$next" "$current"
 
-          [[ "$deploy_path" =~ ^/[A-Za-z0-9._/-]+$ ]] || fail "DEPLOY_PATH is invalid"
-          [[ "$deploy_path" != *".."* && "$deploy_path" != "/" ]] ||
-            fail "DEPLOY_PATH is unsafe"
-          [[ "$release_sha" =~ ^[0-9a-f]{40}$ ]] || fail "release SHA is invalid"
-          [[ "$run_attempt" =~ ^[0-9]+$ ]] || fail "run attempt is invalid"
-          [[ "$instances" =~ ^[1-9][0-9]*$ ]] || fail "PM2 instance count is invalid"
-          [[ "$port" =~ ^[0-9]{1,5}$ ]] || fail "SSR port is invalid"
-          (( port >= 1 && port <= 65535 )) || fail "SSR port is out of range"
-
-          archive="$deploy_path/incoming/release-$release_sha.tgz"
-          checksum="$archive.sha256"
-          releases_path="$deploy_path/releases"
-          current_path="$deploy_path/current"
-          previous_path="$deploy_path/previous"
-          new_release="$releases_path/$release_sha-$run_attempt"
-          previous_release="$(readlink -f "$current_path" 2>/dev/null || true)"
-
-          [[ -f "$archive" ]] || fail "uploaded release archive is missing"
-          [[ -f "$checksum" ]] || fail "uploaded checksum file is missing"
-          [[ ! -e "$new_release" && ! -L "$new_release" ]] ||
-            fail "release directory already exists"
-          expected_checksum="$(awk 'NF { print $1; exit }' "$checksum")"
-          actual_checksum="$(sha256sum "$archive" | awk '{ print $1 }')"
-          [[ "$expected_checksum" =~ ^[0-9a-f]{64}$ ]] || fail "checksum file is invalid"
-          [[ "$actual_checksum" == "$expected_checksum" ]] ||
-            fail "uploaded release checksum does not match"
-
-          mkdir -p -- "$new_release/logs" || fail "cannot create release directory"
-          tar -xzf "$archive" -C "$new_release" || fail "cannot extract release archive"
-          [[ -f "$new_release/index.js" ]] || fail "SSR release does not contain index.js"
-          [[ -f "$new_release/deploy/ecosystem.config.cjs" ]] ||
-            fail "SSR release does not contain the PM2 configuration"
-
-          if [[ -n "$previous_release" && -d "$previous_release" ]]; then
-            ln -sfn "$previous_release" "$previous_path"
-          fi
-
-          next_link="$deploy_path/.current-$release_sha-$run_attempt"
-          [[ ! -e "$next_link" && ! -L "$next_link" ]] ||
-            fail "temporary activation symlink already exists"
-          ln -s "$new_release" "$next_link" || fail "cannot create activation symlink"
-          mv -Tf -- "$next_link" "$current_path" || fail "cannot activate SSR release"
-
-          export PM2_APP_NAME="$app_name"
-          export PM2_INSTANCES="$instances"
-          export SSR_PORT="$port"
-          export DEPLOY_CURRENT_PATH="$current_path"
-
+          export PM2_APP_NAME="$app_name" PM2_INSTANCES="$instances" SSR_PORT="$port"
+          export DEPLOY_CURRENT_PATH="$current"
           rollback() {
-            if test -n "$previous_release" && test -d "$previous_release"; then
-              rollback_link="$deploy_path/.rollback-$release_sha-$run_attempt"
+            if test -n "$old" && test -d "$old"; then
+              rollback_link="$deploy_path/.rollback-$release_id"
               rm -f -- "$rollback_link"
-              ln -s "$previous_release" "$rollback_link"
-              mv -Tf -- "$rollback_link" "$current_path"
-              pm2 startOrGracefulReload "$current_path/deploy/ecosystem.config.cjs" --only "$app_name" --update-env || true
+              ln -s "$old" "$rollback_link"
+              mv -Tf -- "$rollback_link" "$current"
+              pm2 startOrGracefulReload "$current/deploy/ecosystem.config.cjs" \
+                --only "$app_name" --update-env || true
             fi
           }
           trap rollback ERR
 
           if pm2 describe "$app_name" >/dev/null 2>&1; then
-            pm2 startOrGracefulReload "$current_path/deploy/ecosystem.config.cjs" --only "$app_name" --update-env
+            pm2 startOrGracefulReload "$current/deploy/ecosystem.config.cjs" \
+              --only "$app_name" --update-env
           else
-            pm2 start "$current_path/deploy/ecosystem.config.cjs" --only "$app_name"
+            pm2 start "$current/deploy/ecosystem.config.cjs" --only "$app_name"
           fi
 
           healthy=false
           for _ in {1..15}; do
-            if curl --fail --silent --show-error --max-time 5 "http://127.0.0.1:$port/" >/dev/null; then
-              healthy=true
-              break
+            if curl -fsS --max-time 5 "http://127.0.0.1:$port/" >/dev/null &&
+              curl -fsS --max-time 5 "http://127.0.0.1:$port/deployment.json" |
+                cmp -s "$metadata" -; then
+              healthy=true; break
             fi
             sleep 2
           done
-          if [[ "$healthy" != true ]]; then
-            echo "::error::SSR process did not become healthy on its local port" >&2
-            false
-          fi
+          test "$healthy" = true
           trap - ERR
           pm2 save
 
-          rm -f -- "$archive" "$checksum"
-          mapfile -t old_releases < <(find "$releases_path" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' | sort -rn | tail -n +6 | cut -d' ' -f2-)
-          for old_release in "${old_releases[@]}"; do
-            test "$old_release" != "$new_release" && rm -rf -- "$old_release"
-          done
+          current_target="$(readlink -f "$current")"
+          previous_target="$(readlink -f "$previous" 2>/dev/null || true)"
+          find "$releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' |
+            sort -rn | tail -n +6 | cut -d' ' -f2- |
+            while IFS= read -r stale; do
+              stale="$(readlink -f "$stale")"
+              test "$stale" = "$current_target" || test "$stale" = "$previous_target" || rm -rf -- "$stale"
+            done || true
           REMOTE
 
-      - name: Verify public SSR deployment
+      - name: Verify deployment
         id: health
-        shell: bash
         env:
-          HEALTHCHECK_URL: ${{ vars.DEPLOYMENT_URL }}
-          EXPECTED_COMMIT: ${{ github.sha }}
+          DEPLOYMENT_URL: ${{ vars.DEPLOYMENT_URL }}
           BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
           BASIC_AUTH_PASS: ${{ secrets.BASIC_AUTH_PASS }}
         run: |
           set -Eeuo pipefail
-          [[ -n "$HEALTHCHECK_URL" ]] || {
-            echo "DEPLOYMENT_URL is required." >&2
-            exit 1
-          }
-          [[ "$HEALTHCHECK_URL" == https://* ]] || {
-            echo "DEPLOYMENT_URL must use HTTPS when Basic Auth is enabled." >&2
-            exit 1
-          }
-          [[ -n "$BASIC_AUTH_USER" ]] || {
-            echo "BASIC_AUTH_USER secret is required." >&2
-            exit 1
-          }
-          [[ -n "$BASIC_AUTH_PASS" ]] || {
-            echo "BASIC_AUTH_PASS secret is required." >&2
-            exit 1
-          }
+          : "${DEPLOYMENT_URL:?Missing DEPLOYMENT_URL variable}"
+          : "${BASIC_AUTH_USER:?Missing BASIC_AUTH_USER secret}"
+          : "${BASIC_AUTH_PASS:?Missing BASIC_AUTH_PASS secret}"
+          [[ "$DEPLOYMENT_URL" == https://* ]]
 
-          curl_options=(
-            --fail
-            --silent
-            --show-error
-            --location
-            --retry 5
-            --retry-all-errors
-            --retry-delay 3
-            --max-time 20
-            --basic
-            --user "$BASIC_AUTH_USER:$BASIC_AUTH_PASS"
-          )
+          args=(--fail --silent --show-error --location --retry 5 --retry-all-errors
+            --retry-delay 3 --max-time 20 --proto '=https' --proto-redir '=https'
+            --basic --user "$BASIC_AUTH_USER:$BASIC_AUTH_PASS")
+          curl "${args[@]}" --output /dev/null "${DEPLOYMENT_URL%/}/"
+          file="$RUNNER_TEMP/deployment.json"
+          type="$(curl "${args[@]}" --header 'Accept: application/json' \
+            --output "$file" --write-out '%{content_type}' \
+            "${DEPLOYMENT_URL%/}/deployment.json?run=$GITHUB_RUN_ID")"
+          [[ "$type" == application/json* ]]
+          jq -e --arg commit "$GITHUB_SHA" \
+            'type == "object" and .commit == $commit' "$file" >/dev/null
 
-          curl "${curl_options[@]}" --output /dev/null "${HEALTHCHECK_URL%/}/"
-          deployment_json="$(curl "${curl_options[@]}" \
-            "${HEALTHCHECK_URL%/}/deployment.json?run=$GITHUB_RUN_ID")"
-          jq --exit-status --arg commit "$EXPECTED_COMMIT" \
-            '.commit == $commit' <<< "$deployment_json" >/dev/null
-
-      - name: Roll back failed public health check
-        if: ${{ failure() && steps.health.outcome == 'failure' }}
-        shell: bash
+      - name: Roll back
+        if: ${{ failure() && steps.activate.outcome == 'success' && steps.health.outcome == 'failure' }}
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           set -Eeuo pipefail
-          ssh ienavps-home bash -s -- \
-            "$DEPLOY_PATH" "$PM2_APP_NAME" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" <<'REMOTE'
+          ssh ienavps-home bash -s -- "$DEPLOY_PATH" "$RELEASE_ID" "$PM2_APP_NAME" \
+            "$PM2_INSTANCES" "$SSR_PORT" <<'REMOTE'
           set -Eeuo pipefail
-          deploy_path="$1"
-          app_name="$2"
-          run_id="$3"
-          run_attempt="$4"
-          previous_path="$deploy_path/previous"
-          current_path="$deploy_path/current"
-          [[ -L "$previous_path" ]] || {
-            echo "No previous SSR release is available for rollback." >&2
-            exit 1
-          }
-          rollback_target="$(readlink -f "$previous_path")"
-          [[ -d "$rollback_target" ]] || {
-            echo "Previous SSR release is missing." >&2
-            exit 1
-          }
-          rollback_link="$deploy_path/.health-rollback-$run_id-$run_attempt"
-          rm -f -- "$rollback_link"
-          ln -s "$rollback_target" "$rollback_link"
-          mv -Tf -- "$rollback_link" "$current_path"
-          export DEPLOY_CURRENT_PATH="$current_path"
-          pm2 startOrGracefulReload "$current_path/deploy/ecosystem.config.cjs" \
+          deploy_path="$1"; release_id="$2"; app_name="$3"; instances="$4"; port="$5"
+          target="$(readlink -f "$deploy_path/previous")"
+          test -d "$target"
+          rollback="$deploy_path/.health-rollback-$release_id"
+          rm -f -- "$rollback"
+          ln -s "$target" "$rollback"
+          mv -Tf -- "$rollback" "$deploy_path/current"
+          export PM2_APP_NAME="$app_name" PM2_INSTANCES="$instances" SSR_PORT="$port"
+          export DEPLOY_CURRENT_PATH="$deploy_path/current"
+          pm2 startOrGracefulReload "$deploy_path/current/deploy/ecosystem.config.cjs" \
             --only "$app_name" --update-env
           REMOTE
 
-      - name: Remove runner SSH credentials
+      - name: Remove SSH credentials
         if: ${{ always() }}
-        shell: bash
-        run: >-
-          rm -f -- "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts"
-          "$HOME/.ssh/known_hosts.source" "$HOME/.ssh/config"
+        run: rm -f -- "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts" "$HOME/.ssh/known_hosts.source" "$HOME/.ssh/config"
