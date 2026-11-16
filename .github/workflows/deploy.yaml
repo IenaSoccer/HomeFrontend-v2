@@ -107,21 +107,21 @@ jobs:
 
           awk '
             $1 !~ /^#/ && NF >= 3 && $2 ~ /^(ssh-|ecdsa-|sk-)/ {
-              print "ienavps", $2, $3
+              print "ienavps-home", $2, $3
             }
           ' "$HOME/.ssh/known_hosts.source" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/known_hosts"
-          ssh-keygen -F ienavps -f "$HOME/.ssh/known_hosts" >/dev/null ||
+          ssh-keygen -F ienavps-home -f "$HOME/.ssh/known_hosts" >/dev/null ||
             fail "SSH_KNOWN_HOSTS contains no supported OpenSSH host key"
 
           {
-            printf 'Host ienavps\n'
+            printf 'Host ienavps-home\n'
             printf '  HostName %s\n' "$SSH_HOST"
             printf '  Port %s\n' "$SSH_PORT"
             printf '  User %s\n' "$SSH_USER"
             printf '  IdentityFile %s\n' "$HOME/.ssh/deploy_key"
             printf '  UserKnownHostsFile %s\n' "$HOME/.ssh/known_hosts"
-            printf '  HostKeyAlias ienavps\n'
+            printf '  HostKeyAlias ienavps-home\n'
             printf '  IdentitiesOnly yes\n'
             printf '  BatchMode yes\n'
             printf '  StrictHostKeyChecking yes\n'
@@ -134,19 +134,19 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          ssh ienavps bash -s -- "$DEPLOY_PATH" <<'REMOTE'
+          ssh ienavps-home bash -s -- "$DEPLOY_PATH" <<'REMOTE'
           set -Eeuo pipefail
           deploy_path="$1"
           mkdir -p -- "$deploy_path/incoming" "$deploy_path/releases"
           REMOTE
           scp "release-${GITHUB_SHA}.tgz" "release-${GITHUB_SHA}.tgz.sha256" \
-            "ienavps:$DEPLOY_PATH/incoming/"
+            "ienavps-home:$DEPLOY_PATH/incoming/"
 
       - name: Activate, verify and roll back on failure
         shell: bash
         run: |
           set -Eeuo pipefail
-          ssh ienavps bash -s -- \
+          ssh ienavps-home bash -s -- \
             "$DEPLOY_PATH" "$GITHUB_SHA" "$PM2_APP_NAME" "$PM2_INSTANCES" "$SSR_PORT" "$GITHUB_RUN_ATTEMPT" <<'REMOTE'
           set -Eeuo pipefail
 
@@ -300,7 +300,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          ssh ienavps bash -s -- \
+          ssh ienavps-home bash -s -- \
             "$DEPLOY_PATH" "$PM2_APP_NAME" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" <<'REMOTE'
           set -Eeuo pipefail
           deploy_path="$1"
