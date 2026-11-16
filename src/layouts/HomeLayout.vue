@@ -40,7 +40,6 @@ import WAlert from '@/components/Elements/EAlert.vue';
 import links from '@/collections/navbar';
 import type Globals from '@/contracts/Globals';
 import { useMeta, type EventBus } from 'quasar';
-import { useMappingsStore } from '@/stores/Mappings';
 
 const SITE_NAME = 'Iena Soccer';
 const SITE_URL = 'https://www.ienasoccer.it';
@@ -83,16 +82,10 @@ export default defineComponent({
       this.globals.page = n.path;
     },
   },
-  async mounted() {
+  mounted() {
     this.globals.page = this.$route.path;
     this.bus.on('sidebar-toggle', this.onSidebarToggle!);
     this.bus.on('navigate-to', this.onNavigateTo!);
-
-    try {
-      this.bus.emit('mappings:loaded', await useMappingsStore().list());
-    } catch (error) {
-      console.error('Impossibile caricare le associazioni del sito', error);
-    }
   },
   setup() {
     const route = useRoute();

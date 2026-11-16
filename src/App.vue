@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, provide, watchEffect } from 'vue';
+import { onMounted, onServerPrefetch, provide, reactive } from 'vue';
 import type { Mappings } from './contracts/Mappings';
 import type { UUID } from './contracts/UUID';
 import type { Resource } from './contracts/Resource';
@@ -11,26 +11,25 @@ import { useMappingsStore } from './stores/Mappings';
 import { loadResource } from './resources/loader';
 import { useResourceStore } from './stores/Resources';
 
+const mappingsStore = useMappingsStore();
 const mappings = reactive<Mappings>({
-  defaults: {},
-  custom: {},
+  defaults: mappingsStore.mappings?.defaults ?? {},
+  custom: mappingsStore.mappings?.custom ?? {},
 });
 const data = reactive<Record<string, Resource<UUID>[]>>({});
 
-watchEffect(() => {
-  if (Object.keys(mappings.defaults).length === 0) {
-    useMappingsStore()
-      .list()
-      .then((m) => {
-        mappings.defaults = m.defaults;
-        mappings.custom = m.custom;
-      })
-      .catch(() => {
-        mappings.defaults = {};
-        mappings.custom = {};
-      });
+async function loadMappings() {
+  try {
+    const loadedMappings = await mappingsStore.list();
+    mappings.defaults = loadedMappings.defaults;
+    mappings.custom = loadedMappings.custom;
+  } catch (error) {
+    console.error('Impossibile caricare le associazioni del sito', error);
   }
-});
+}
+
+onServerPrefetch(loadMappings);
+onMounted(() => void loadMappings());
 
 async function ensureResource(uuid: UUID, resource: string) {
   const key = mappings.defaults[resource]?.name.toLowerCase();

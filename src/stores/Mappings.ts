@@ -9,6 +9,8 @@ interface MappingsState {
   mappings: Mappings | null;
 }
 
+const pendingRequests = new WeakMap<object, Promise<Mappings>>();
+
 export const useMappingsStore = defineStore('mappings', {
   state: (): MappingsState => ({
     mappings: null,
@@ -16,12 +18,24 @@ export const useMappingsStore = defineStore('mappings', {
 
   actions: {
     async list(): Promise<Mappings> {
-      const response: AxiosResponse<ApiResponse> = await api.get(`/mappings`);
+      if (this.mappings) return this.mappings;
 
-      const mappings = extractBody<Mappings>(response);
-      this.mappings = mappings;
+      const store = this as object;
+      const pendingRequest = pendingRequests.get(store);
+      if (pendingRequest) return pendingRequest;
 
-      return mappings;
+      const request = (async () => {
+        const response: AxiosResponse<ApiResponse> = await api.get('/mappings');
+        const mappings = extractBody<Mappings>(response);
+        this.mappings = mappings;
+
+        return mappings;
+      })().finally(() => {
+        pendingRequests.delete(store);
+      });
+
+      pendingRequests.set(store, request);
+      return request;
     },
   },
 });
