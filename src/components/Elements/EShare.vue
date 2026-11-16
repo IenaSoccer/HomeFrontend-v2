@@ -13,6 +13,7 @@
       ref="share"
       v-on:focus="$event.target ? ($event.target as HTMLInputElement).select() : null"
       :value="url"
+      aria-label="Indirizzo da condividere"
     />
     <div class="flex flex-col justify-center items-center">
       <q-btn
@@ -20,7 +21,9 @@
         unelevated
         class="h-8 w-full p-0"
         target="_blank"
-        :href="`https://www.facebook.com/sharer.php?u=${url}`"
+        rel="noopener noreferrer"
+        aria-label="Condividi su Facebook"
+        :href="`https://www.facebook.com/sharer.php?u=${encodedUrl}`"
       >
         <div class="bg-blue-700 w-full h-full flex flex-row items-center justify-center">
           <q-icon tag="span" name="fab fa-facebook" color="white" size="sm"></q-icon>
@@ -30,7 +33,9 @@
         flat
         unelevated
         target="_blank"
-        :href="`https://twitter.com/intent/tweet?text=${title}&url=${url}`"
+        rel="noopener noreferrer"
+        aria-label="Condividi su X"
+        :href="`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`"
         class="h-8 w-full p-0"
       >
         <div class="bg-sky-300 w-full h-full flex flex-row items-center justify-center">
@@ -43,7 +48,9 @@
         flat
         unelevated
         target="_blank"
-        :href="`https://pinterest.com/pin/create/button/?url=${url}&description=${title}&media=${thumb}`"
+        rel="noopener noreferrer"
+        aria-label="Condividi su Pinterest"
+        :href="`https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedTitle}&media=${encodedThumb}`"
         class="h-8 w-full p-0"
       >
         <div class="bg-red-500 w-full h-full flex flex-row items-center justify-center">
@@ -84,14 +91,26 @@ export default defineComponent({
     },
   },
   methods: {
-    copyURL() {
+    async copyURL() {
       const input = this.$refs.share as HTMLInputElement | null;
-      if (input) {
-        input.focus();
-        document.execCommand('copy');
+      try {
+        await navigator.clipboard.writeText(this.url);
+      } catch {
+        input?.focus();
+        input?.select();
       }
     },
   },
-  setup() {},
+  computed: {
+    encodedUrl(): string {
+      return encodeURIComponent(this.url);
+    },
+    encodedTitle(): string {
+      return encodeURIComponent(this.title);
+    },
+    encodedThumb(): string {
+      return encodeURIComponent(this.thumb);
+    },
+  },
 });
 </script>

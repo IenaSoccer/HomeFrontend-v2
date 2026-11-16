@@ -6,11 +6,12 @@
   "author": "ErPaciocco <erpaciocco.smhacko@protonmail.com>",
   "type": "module",
   "private": true,
+  "packageManager": "npm@10.9.4",
   "scripts": {
     "type-check": "vue-tsc --noEmit --project tsconfig.json",
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
-    "test": "echo \"No test specified\" && exit 0",
+    "test": "npm run lint && npm run type-check",
     "dev": "quasar dev",
     "dev:ssr": "quasar dev -m ssr",
     "build": "quasar build",
@@ -19,40 +20,38 @@
     "postinstall": "quasar prepare"
   },
   "dependencies": {
-    "@quasar/extras": "^1.16.4",
+    "@quasar/extras": "^2.1.0",
     "@splidejs/vue-splide": "^0.6.12",
-    "@tailwindcss/postcss": "^4.1.12",
-    "@tailwindcss/vite": "^4.2.2",
-    "axios": "^1.2.1",
-    "compression": "^1.8.1",
-    "express": "^5.1.0",
+    "axios": "^1.13.2",
     "pinia": "^3.0.1",
-    "quasar": "^2.19.2",
-    "vue": "^3.4.18",
-    "vue-router": "^4.0.12"
+    "quasar": "^2.35.4",
+    "sanitize-html": "^2.17.0",
+    "vue": "^3.5.22",
+    "vue-router": "^5.5.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.14.0",
-    "@quasar/app-vite": "^2.5.4",
-    "@types/compression": "^1.8.1",
-    "@types/express": "^5.0.3",
-    "@types/node": "^20.5.9",
+    "@quasar/app-vite": "^3.10.4",
+    "@tailwindcss/postcss": "^4.1.12",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/node": "^22.20.5",
+    "@types/sanitize-html": "^2.16.2",
     "@vue/eslint-config-prettier": "^10.1.0",
-    "@vue/eslint-config-typescript": "^14.4.0",
+    "@vue/eslint-config-typescript": "^14.9.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.14.0",
-    "eslint-plugin-vue": "^9.30.0",
-    "globals": "^15.12.0",
+    "eslint-plugin-vue": "^10.12.1",
+    "globals": "^16.4.0",
     "postcss": "^8.5.6",
     "prettier": "^3.3.3",
     "tailwindcss": "^4.1.12",
     "typescript": "~5.9.2",
-    "vite-plugin-checker": "^0.9.0",
-    "vue-tsc": "^2.2.10"
+    "vite-plugin-checker": "^0.11.0",
+    "vue-eslint-parser": "^10.2.0",
+    "vue-tsc": "^3.0.7"
   },
   "engines": {
-    "node": "^28 || ^26 || ^24 || ^22 || ^20 || ^18",
-    "npm": ">= 6.13.4",
-    "yarn": ">= 1.21.1"
+    "node": "^22.22.0 || ^24 || ^26 || ^28 || >=30",
+    "npm": "^10.9.4"
   }
 }

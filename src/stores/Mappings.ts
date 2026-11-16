@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia';
-import { extractBody } from 'src/resources/loader';
+import { extractBody } from '@/resources/loader';
 import type { AxiosResponse } from 'axios';
-import type { Mappings } from 'src/contracts/Mappings';
-import type { ApiResponse } from 'src/contracts/ApiResponse';
-import api from 'src/utils/api';
+import type { Mappings } from '@/contracts/Mappings';
+import type { ApiResponse } from '@/contracts/ApiResponse';
+import api from '@/utils/api';
 
 interface MappingsState {
   mappings: Mappings | null;

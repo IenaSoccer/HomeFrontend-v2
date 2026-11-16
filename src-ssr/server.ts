@@ -9,8 +9,8 @@
  * Make sure to yarn add / npm install (in your project root)
  * anything you import here (except for express and compression).
  */
+import { randomBytes } from 'node:crypto';
 import type { Server } from 'node:http';
-import compression from 'compression';
 import express from 'express';
 import type { Application, Request, Response } from 'express';
 import {
@@ -20,7 +20,7 @@ import {
   defineSsrClose,
   defineSsrServeStaticContent,
   defineSsrRenderPreloadTag
-} from '#q-app/wrappers';
+} from '#q-app';
 
 declare module '#q-app' {
   interface SsrDriver {
@@ -36,7 +36,7 @@ declare module '#q-app' {
  *
  * Can be async: defineSsrCreate(async ({ ... }) => { ... })
  */
-export const create = defineSsrCreate((/* { ... } */) => {
+export const create = defineSsrCreate(async (/* { ... } */) => {
   const app = express();
 
   // attackers can use this header to detect apps running Express
@@ -45,7 +45,30 @@ export const create = defineSsrCreate((/* { ... } */) => {
 
   // place here any middlewares that
   // absolutely need to run before anything else
-  if (process.env.PROD) {
+  if (import.meta.env.QUASAR_PROD) {
+    const { default: helmet } = await import('helmet');
+    const secureHeaders = helmet({
+      contentSecurityPolicy: {
+        directives: {
+          connectSrc: ["'self'", 'https://api.ienasoccer.it'],
+          frameSrc: ["'self'", 'https://www.google.com'],
+          imgSrc: ["'self'", 'data:', 'blob:', 'https://media.ienasoccer.it'],
+          mediaSrc: ["'self'", 'blob:', 'https://media.ienasoccer.it'],
+          scriptSrc: [
+            "'self'",
+            (_req, res) =>
+              `'nonce-${String((res as unknown as Response).locals.cspNonce)}'`,
+          ],
+        },
+      },
+    });
+
+    app.use((req, res, next) => {
+      res.locals.cspNonce = randomBytes(18).toString('base64');
+      secureHeaders(req, res, next);
+    });
+
+    const { default: compression } = await import('compression');
     app.use(compression());
   }
 
@@ -78,11 +101,18 @@ export const injectDevMiddleware = defineSsrInjectDevMiddleware(({ app }) => {
  *
  * Can be async: defineSsrListen(async ({ app, devHttpsApp, port }) => { ... })
  */
-export const listen = defineSsrListen(({ app, devHttpsApp, port }) => {
-  const server = devHttpsApp || app;
+export const listen = defineSsrListen(async ({ app, devHttpsOptions, port }) => {
+  if (import.meta.env.QUASAR_DEV && devHttpsOptions) {
+    const https = await import('node:https');
+    const server = https.createServer(devHttpsOptions, (req, res) => app(req, res));
+    return server.listen(port);
+  }
+
+  const http = await import('node:http');
+  const server = http.createServer((req, res) => app(req, res));
   return server.listen(port, () => {
-    if (process.env.PROD) {
-      console.log('Server listening at port ' + port);
+    if (import.meta.env.QUASAR_PROD) {
+      console.log(`Server listening on port ${port}`);
     }
   });
 });
@@ -101,7 +131,7 @@ export const close = defineSsrClose(({ listenResult }) => {
   return listenResult.close();
 });
 
-const maxAge = process.env.DEV ? 0 : 1000 * 60 * 60 * 24 * 30;
+const maxAge = import.meta.env.QUASAR_DEV ? 0 : 1000 * 60 * 60 * 24 * 30;
 
 /**
  * Should return a function that will be used to configure the webserver
@@ -113,7 +143,7 @@ const maxAge = process.env.DEV ? 0 : 1000 * 60 * 60 * 24 * 30;
  * Can return an async function: return async ({ urlPath = '/', pathToServe = '.', opts = {} }) => {
  */
 export const serveStaticContent = defineSsrServeStaticContent(({ app, resolve }) => {
-  return ({ urlPath = '/', pathToServe = '.', opts = {} }) => {
+  return ({ urlPath, pathToServe, opts = {} }) => {
     const serveFn = express.static(resolve.public(pathToServe), { maxAge, ...opts });
     app.use(resolve.urlPath(urlPath), serveFn);
   };

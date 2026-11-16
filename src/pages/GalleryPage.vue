@@ -7,12 +7,12 @@
 </template>
 <script lang="ts">
 import { defineComponent, inject } from 'vue';
-import WGallery from 'src/components/Widgets/Mappable/WGallery.vue';
+import WGallery from '@/components/Widgets/Mappable/WGallery.vue';
 
 import type { EventBus } from 'quasar';
-import type { Resource } from 'src/contracts/Resource';
-import type { Mappings } from 'src/contracts/Mappings';
-import type { UUID } from 'src/contracts/UUID';
+import type { Resource } from '@/contracts/Resource';
+import type { Mappings } from '@/contracts/Mappings';
+import type { UUID } from '@/contracts/UUID';
 
 export default defineComponent({
   name: 'GalleryPage',

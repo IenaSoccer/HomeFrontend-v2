@@ -19,35 +19,37 @@
     </div>
     <div v-else>Non ci sono contenuti suggeriti al momento</div>
   </div>
-  <div v-else class="flex flex-row justify-center items-center m-8">
-    <q-spinner color="secondary" size="10em" :thickness="5"></q-spinner>
+  <div v-else class="flex flex-col gap-4 p-8">
+    <ESkeleton v-for="k in 3" :key="k" width="256px" height="256px" rounded />
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, inject } from 'vue';
+import { defineComponent } from 'vue';
 
-import { loadResource, downloadAttachments } from 'src/resources/loader';
-import type { EventBus } from 'quasar';
-import type { Resource } from 'src/contracts/Resource';
-import type { Mappings } from 'src/contracts/Mappings';
-import { useMappingsStore } from 'src/stores/Mappings';
-import type { Attachment } from 'src/contracts/Attachment';
-import { useResourceStore } from 'src/stores/Resources';
-import type { UUID } from 'src/contracts/UUID';
+import { loadResource, downloadAttachments } from '@/resources/loader';
+import { attachmentUrl, slugify } from '@/utils/format';
+import ESkeleton from './ESkeleton.vue';
+import type { Resource } from '@/contracts/Resource';
+import type { Mappings } from '@/contracts/Mappings';
+import { useMappingsStore } from '@/stores/Mappings';
+import type { Attachment } from '@/contracts/Attachment';
+import { useResourceStore } from '@/stores/Resources';
+import type { UUID } from '@/contracts/UUID';
 
 export default defineComponent({
   name: 'WRelatedPosts',
+  components: {
+    ESkeleton,
+  },
   props: {
     currentPostId: {
       type: String,
       required: true,
     },
   },
-  setup() { },
   data() {
     return {
       mappings: {} as Mappings,
-      bus: inject('bus') as EventBus,
       news: [] as Resource<Attachment>[],
       loaded: false,
     };
@@ -72,23 +74,9 @@ export default defineComponent({
       return array;
     },
     thumb(url: string) {
-      const attachmentsBase =
-        process.env.NODE_ENV === 'production'
-          ? process.env.PRODUCTION_ATTACHMENTS_URL
-          : process.env.DEVELOPMENT_ATTACHMENTS_URL;
-
-      return `${attachmentsBase}/${url}`;
+      return attachmentUrl(url);
     },
-    slugify(str: string) {
-      return String(str)
-        .normalize('NFKD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9 -]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
-    },
+    slugify,
     async loadResource(res: string): Promise<Resource<UUID>[]> {
       return loadResource(this.mappings.defaults[res]!.id, useResourceStore()) as Promise<
         Resource<UUID>[]
@@ -96,11 +84,11 @@ export default defineComponent({
     },
     async getAllPosts() {
       const risorse = await this.loadResource('news');
-      risorse.forEach((n) => {
-        downloadAttachments(n)
-          .then((r) => this.news.push(r as Resource<Attachment>))
-          .catch(() => { });
-      });
+
+      this.news = (await Promise.all(
+        risorse.map((n) => downloadAttachments(n)),
+      )) as Resource<Attachment>[];
+
       return this.news;
     },
   },

@@ -11,7 +11,7 @@
       >
     </p>
     <span class="inline-flex sm:ml-auto sm:mt-0 mt-2 justify-center sm:justify-start">
-      <a class="text-gray-200" href="https://www.facebook.com/profile.php?id=100054428202395">
+      <a class="text-gray-200" href="https://www.facebook.com/profile.php?id=100054428202395" aria-label="Iena Soccer su Facebook">
         <svg
           fill="currentColor"
           stroke-linecap="round"
@@ -23,7 +23,7 @@
           <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path>
         </svg>
       </a>
-      <a class="ml-3 text-gray-200" href="https://www.instagram.com/asdienasocceracademy2014/">
+      <a class="ml-3 text-gray-200" href="https://www.instagram.com/asdienasocceracademy2014/" aria-label="Iena Soccer su Instagram">
         <svg
           fill="none"
           stroke="currentColor"

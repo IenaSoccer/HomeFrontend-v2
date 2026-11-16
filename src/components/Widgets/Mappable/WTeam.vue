@@ -35,8 +35,13 @@
       </div>
     </q-intersection>
   </div>
-  <div v-else class="flex flex-row justify-center items-center m-8">
-    <q-spinner color="accent" size="10em" :thickness="10"></q-spinner>
+  <div v-else class="flex flex-col md:flex-row justify-between items-stretch min-h-[400px]">
+    <div class="w-full md:max-w-[200px] my-4 flex flex-col gap-2">
+      <ESkeleton v-for="k in 3" :key="k" height="72px" />
+    </div>
+    <div class="w-full md:grow flex items-center justify-center px-4">
+      <ESkeleton height="400px" rounded />
+    </div>
   </div>
 </template>
 <style scoped>
@@ -46,15 +51,19 @@
 </style>
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { inject } from 'vue';
-import type { Resource } from 'src/contracts/Resource';
-import type { EventBus } from 'quasar';
-import type { UUID } from 'src/contracts/UUID';
-import type { Attachment } from 'src/contracts/Attachment';
-import { downloadAttachments } from 'src/resources/loader';
+import type { Resource } from '@/contracts/Resource';
+import type { UUID } from '@/contracts/UUID';
+import type { Attachment } from '@/contracts/Attachment';
+import { downloadAttachments } from '@/resources/loader';
+import { attachmentUrl } from '@/utils/format';
+
+import ESkeleton from '@/components/Elements/ESkeleton.vue';
 
 export default defineComponent({
   name: 'WTeam',
+  components: {
+    ESkeleton,
+  },
   props: {
     team: {
       type: {} as () => Resource<UUID>[],
@@ -74,9 +83,6 @@ export default defineComponent({
       immediate: true,
     },
   },
-  created() {
-    this.bus.emit('register-ref', 'team', this);
-  },
   methods: {
     async changeTeam(id: UUID, slide = 0) {
       this.loaded = false;
@@ -88,17 +94,11 @@ export default defineComponent({
       this.loaded = true;
     },
     thumb(url: string) {
-      const attachmentsBase =
-        process.env.NODE_ENV === 'production'
-          ? process.env.PRODUCTION_ATTACHMENTS_URL
-          : process.env.DEVELOPMENT_ATTACHMENTS_URL;
-
-      return `${attachmentsBase}${process.env.NODE_ENV === 'production' ? '/1280/' : '/'}${url}`;
+      return attachmentUrl(url, 1280);
     },
   },
   data() {
     return {
-      bus: inject('bus') as EventBus,
       currentSlide: '' as UUID,
       teams: [] as Resource<UUID>[],
       currentTeam: {} as Resource<Attachment>,

@@ -2,22 +2,33 @@
   <div class="" v-cloak v-if="loaded">
     <div class="q-gutter-md" v-if="data && data.id">
       <q-carousel v-model="slide" transition-prev="slide-right" transition-next="slide-left" swipeable animated v-cloak
-        infinite control-color="white" padding arrows height="600px" class="bg-dark text-[#f3f4f6]">
+        infinite control-color="white" padding arrows class="h-[min(72vh,600px)] bg-dark text-[#f3f4f6]">
         <q-carousel-slide v-for="s in data.content.data" :key="s.id" :name="s.id" class="p-0"
           :class="{ 'bg-contain bg-no-repeat': mantainAspectRatio, 'lg:bg-contain bg-no-repeat': true }"
-          :img-src="s.data.path && s.data.path.endsWith('.jpg') ? thumb(s.data.path) : ''">
-          <q-video v-if="s.data.path ? s.data.path.endsWith('.mp4') : false" :src="thumb(s.data.path)" :ratio="16 / 9"
+          :img-src="isImage(s.data.path) ? thumb(s.data.path) : ''">
+          <q-video v-if="isVideo(s.data.path)" :src="original(s.data.path)" :ratio="16 / 9"
             class="absolute-full w-full h-full z-0">
           </q-video>
-          <div class="flex flex-col justify-between text-3xl roboto-flex h-full">
-            <div class="z-10 bg-[rgba(0,0,0,.6)] h-16 w-full flex flex-row justify-start items-center px-2">
-              <div class="flex flex-row flex-wrap justify-between items-center w-full">
-                <div class="grow font-light">{{ s.data.name }}</div>
-                <q-btn icon="download" color="secondary" rounded flat @click="downloadMedia(s.data.path)"></q-btn>
+          <q-btn
+            icon="download"
+            color="secondary"
+            round
+            unelevated
+            class="absolute top-4 right-4 z-20"
+            aria-label="Scarica media"
+            tag="a"
+            :href="original(s.data.path)"
+            target="_blank"
+            rel="noopener noreferrer"
+          />
+          <div class="flex flex-col justify-end text-3xl roboto-flex h-full">
+            <div class="z-10 w-full flex flex-row flex-nowrap justify-between items-stretch">
+              <div
+                class="bg-[rgba(0,0,0,.6)] flex flex-row items-center px-5 py-3 min-w-[30%] w-fit"
+              >
+                <div class="font-light whitespace-nowrap">{{ s.data.name }}</div>
               </div>
-            </div>
-            <div class="z-10 bg-primary opacity-70 my-12 self-end max-w-1/2 flex flex-row justify-center items-center">
-              <div class="flex flex-row justify-center items-center w-full">
+              <div class="bg-primary opacity-70 flex flex-row justify-center items-center shrink-0">
                 <q-btn square padding="md" :label="'#' + tag" flat v-for="(tag, i) in data.attributes?.tags" :key="i"
                   class="text-sm font-light">
                 </q-btn>
@@ -31,26 +42,27 @@
       <div class="select-none font-bold text-4xl text-dark roboto-flex">Non ci sono contenuti</div>
     </div>
   </div>
-  <div v-else class="flex flex-row justify-center items-center m-8">
-    <q-spinner color="primary" size="10em" :thickness="10"></q-spinner>
-  </div>
+  <ESkeleton v-else height="min(72vh, 600px)" />
 </template>
 <script lang="ts">
-import type { EventBus } from 'quasar';
-import type { Attachment } from 'src/contracts/Attachment';
-import type { Mappings } from 'src/contracts/Mappings';
-import type { Resource } from 'src/contracts/Resource';
-import type { UUID } from 'src/contracts/UUID';
-import { downloadAttachments } from 'src/resources/loader';
-import { inject } from 'vue';
+import type { Attachment } from '@/contracts/Attachment';
+import type { Resource } from '@/contracts/Resource';
+import type { UUID } from '@/contracts/UUID';
+import { downloadAttachments } from '@/resources/loader';
+import { attachmentUrl } from '@/utils/format';
 import { defineComponent } from 'vue';
+
+import ESkeleton from '@/components/Elements/ESkeleton.vue';
 
 export default defineComponent({
   name: 'WCarousel',
+  components: {
+    ESkeleton,
+  },
   props: {
     carousel: {
-      type: {} as () => Resource<UUID>,
-      required: true,
+      type: {} as () => Resource<UUID> | undefined,
+      default: undefined,
     },
     mantainAspectRatio: {
       type: Boolean,
@@ -68,35 +80,36 @@ export default defineComponent({
       return;
     }
 
-    this.data = (await downloadAttachments(this.carousel)) as Resource<Attachment>;
-    this.slide = this.data.content.data[this.currentSlide]!.id;
-    this.loaded = true;
+    try {
+      this.data = (await downloadAttachments(this.carousel)) as Resource<Attachment>;
+      const slides = Array.isArray(this.data.content.data) ? this.data.content.data : [];
+      this.slide = (slides[this.currentSlide] ?? slides[0])?.id ?? null;
+    } catch (error) {
+      console.error('Impossibile caricare il carosello', error);
+    } finally {
+      this.loaded = true;
+    }
   },
   data() {
     return {
-      bus: inject('bus') as EventBus,
       loaded: false,
-      slide: '' as UUID,
-      resource: {} as Resource<UUID>,
+      slide: null as UUID | null,
       data: {} as Resource<Attachment>,
-      mappings: inject('mappings') as Mappings,
     };
   },
-  created() {
-    this.bus.emit('register-ref', 'carousel', this);
-  },
   methods: {
-    downloadMedia(url: string) {
+    original(url: string) {
       const size = /\/\d{1,4}\//;
-      window.open(this.thumb(url).replace(size, '/original/'), '_blank');
+      return this.thumb(url).replace(size, '/original/');
+    },
+    isImage(url: string) {
+      return /\.(avif|gif|jpe?g|png|webp)(?:[?#].*)?$/i.test(url);
+    },
+    isVideo(url: string) {
+      return /\.(m4v|mov|mp4|webm)(?:[?#].*)?$/i.test(url);
     },
     thumb(url: string) {
-      const attachmentsBase =
-        process.env.NODE_ENV === 'production'
-          ? process.env.PRODUCTION_ATTACHMENTS_URL
-          : process.env.DEVELOPMENT_ATTACHMENTS_URL;
-
-      return `${attachmentsBase}${process.env.NODE_ENV === 'production' ? '/1280/' : '/'}${url}`;
+      return attachmentUrl(url, 1280);
     },
   },
 });

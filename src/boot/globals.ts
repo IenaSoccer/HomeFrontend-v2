@@ -1,11 +1,11 @@
-import { boot } from 'quasar/wrappers';
-import type Globals from 'src/contracts/Globals';
+import { defineBoot } from '#q-app';
+import type Globals from '@/contracts/Globals';
 
-const globals = {
+const globals: Globals = {
   page: '/',
-} as Globals;
+};
 
-export default boot(({ app }) => {
+export default defineBoot(({ app }) => {
   app.provide('globals', globals);
   app.config.globalProperties.$globals = globals;
 });

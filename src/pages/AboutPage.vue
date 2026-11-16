@@ -8,8 +8,11 @@
       muted
     ></video>
     <WTimeline v-if="loaded" :history="history" />
-    <div v-else class="flex flex-row justify-center items-center my-8">
-      <q-spinner color="primary" size="10em" :thickness="10"></q-spinner>
+    <div v-else class="flex flex-col flex-nowrap justify-center items-center q-px-lg q-py-md w-full">
+      <div v-for="k in 3" :key="k" class="flex flex-col gap-2 my-6 w-full max-w-[600px]">
+        <ESkeleton height="32px" width="45%" rounded />
+        <ESkeleton height="18px" width="80%" rounded />
+      </div>
     </div>
   </q-page>
 </template>
@@ -21,26 +24,22 @@ video {
 <script lang="ts">
 import { defineComponent, inject, reactive } from 'vue';
 
-import WTimeline from 'src/components/Widgets/WTimeline.vue';
-import { loadResource } from 'src/resources/loader';
-import type { Mappings } from 'src/contracts/Mappings';
-import { useMappingsStore } from 'src/stores/Mappings';
-import type { Resource } from 'src/contracts/Resource';
-import { useResourceStore } from 'src/stores/Resources';
-import type { UUID } from 'src/contracts/UUID';
-import type { EventBus } from 'quasar';
+import WTimeline from '@/components/Widgets/WTimeline.vue';
+import ESkeleton from '@/components/Elements/ESkeleton.vue';
+import type { Mappings } from '@/contracts/Mappings';
+import type { Resource } from '@/contracts/Resource';
+import type { UUID } from '@/contracts/UUID';
 
 export default defineComponent({
   name: 'AboutPage',
   components: {
     WTimeline,
+    ESkeleton,
   },
   data() {
     return {
       history: [] as Resource<UUID>[],
-      bus: inject('bus') as EventBus,
       resources: reactive(inject('data') as Record<string, Resource<UUID>[]>),
-      selectedAlbum: {} as Resource<UUID>,
       mappings: reactive(inject('mappings') as Mappings),
       loaded: false,
       ensureResource: inject('ensureResource') as (
@@ -61,22 +60,6 @@ export default defineComponent({
 
         this.loaded = true;
       },
-    },
-  },
-  async mounted() {
-    this.mappings = await useMappingsStore().list();
-
-    if (!this.mappings.defaults['storia']) return;
-
-    this.history = await this.loadResource('storia');
-
-    this.bus.emit('resource:loaded', { content: this.history, resource: 'storia' });
-  },
-  methods: {
-    async loadResource(res: string): Promise<Resource<UUID>[]> {
-      return loadResource(this.mappings.defaults[res]!.id, useResourceStore()) as Promise<
-        Resource<UUID>[]
-      >;
     },
   },
   setup() {

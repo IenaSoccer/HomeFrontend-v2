@@ -6,14 +6,13 @@
 <script lang="ts">
 import { defineComponent, inject, reactive } from 'vue';
 
-import WPost from 'src/components/Widgets/WPost.vue';
-import { downloadAttachments } from 'src/resources/loader';
-import type { EventBus } from 'quasar';
-import type { Resource } from 'src/contracts/Resource';
-import type { Mappings } from 'src/contracts/Mappings';
-import { useResourceStore } from 'src/stores/Resources';
-import type { UUID } from 'src/contracts/UUID';
-import type { Attachment } from 'src/contracts/Attachment';
+import WPost from '@/components/Widgets/WPost.vue';
+import { downloadAttachments } from '@/resources/loader';
+import type { Resource } from '@/contracts/Resource';
+import type { Mappings } from '@/contracts/Mappings';
+import { useResourceStore } from '@/stores/Resources';
+import type { UUID } from '@/contracts/UUID';
+import type { Attachment } from '@/contracts/Attachment';
 
 export default defineComponent({
   name: 'PostPage',
@@ -29,6 +28,12 @@ export default defineComponent({
 
         void (await this.loadResource());
       },
+    },
+    $route(n) {
+      if (!n.path.startsWith('/post/')) return;
+      if (!this.mappings.defaults['news']) return;
+
+      void this.loadResource();
     },
   },
   methods: {
@@ -57,21 +62,14 @@ export default defineComponent({
       this.post.slug = 'preview';
     },
   },
-  updated() {
-    if (!this.mappings.defaults['news']) return;
-
-    void this.loadResource();
-  },
   data() {
     return {
       mappings: reactive(inject('mappings') as Mappings),
-      bus: inject('bus') as EventBus,
       ensureResource: inject('ensureResource') as (
         uuid: UUID,
         resource: string,
       ) => Promise<Resource<UUID>[]>,
       post: {} as Resource<Attachment, string>,
-      slug: '',
       resources: reactive(inject('data') as Record<string, Resource<UUID>[]>),
     };
   },

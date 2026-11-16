@@ -1,7 +1,7 @@
-import { defineConfig } from '#q-app/wrappers';
+import { defineConfig } from '#q-app';
 import tailwindcss from '@tailwindcss/vite';
 
-export default defineConfig(() => {
+export default defineConfig((ctx) => {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     preFetch: true,
@@ -12,17 +12,18 @@ export default defineConfig(() => {
     css: ['app.css', 'styles.scss'],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
-    extras: ['fontawesome-v6', 'roboto-font', 'material-icons'],
+    extras: ['fontawesome-v7', 'roboto-font', 'material-icons'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
+      vueOptionsAPI: true,
       extendViteConf(viteConf) {
         viteConf.plugins ??= [];
         viteConf.plugins.push(...tailwindcss());
       },
       target: {
         browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
-        node: 'node20',
+        node: 'node22',
       },
 
       typescript: {
@@ -32,21 +33,22 @@ export default defineConfig(() => {
 
       vueRouterMode: 'history',
 
-      rebuildCache: true,
-
-      env: {
-        PRODUCTION_API_URL: 'https://api.ienasoccer.it/api/v2/public',
-        PRODUCTION_MEDIA_URL: 'https://media.ienasoccer.it/attachments',
-        PRODUCTION_ATTACHMENTS_URL: 'https://media.ienasoccer.it/attachments',
-        PRODUCTION_PROFILE_URL: 'https://media.ienasoccer.it/profiles',
-        DEVELOPMENT_API_URL: 'http://localhost:8000/api/v2/public',
-        DEVELOPMENT_MEDIA_URL: 'http://localhost/IenaSoccer/Media',
-        DEVELOPMENT_ATTACHMENTS_URL: 'http://localhost/IenaSoccer/Media',
-        DEVELOPMENT_PROFILE_URL: 'http://localhost/IenaSoccer/Media',
+      defineEnv: {
+        QCLI_API_URL: ctx.dev
+          ? 'http://localhost:8000/api/v2/public'
+          : 'https://api.ienasoccer.it/api/v2/public',
+        QCLI_MEDIA_URL: ctx.dev
+          ? 'http://localhost/IenaSoccer/Media'
+          : 'https://media.ienasoccer.it/attachments',
+        QCLI_ATTACHMENTS_URL: ctx.dev
+          ? 'http://localhost/IenaSoccer/Media'
+          : 'https://media.ienasoccer.it/attachments',
+        QCLI_PROFILE_URL: ctx.dev
+          ? 'http://localhost/IenaSoccer/Media'
+          : 'https://media.ienasoccer.it/profiles',
       },
 
       minify: true,
-      polyfillModulePreload: true,
 
       vitePlugins: [
         [
@@ -71,7 +73,7 @@ export default defineConfig(() => {
     framework: {
       config: {},
 
-      iconSet: 'fontawesome-v6',
+      iconSet: 'fontawesome-v7',
       lang: 'en-US',
 
       plugins: [

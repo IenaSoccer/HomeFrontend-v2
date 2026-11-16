@@ -8,8 +8,8 @@
           </h1>
 
           <div class="py-4" v-if="post.thumbnail">
-            <q-img :src="thumb((post.thumbnail as Attachment).data.path)" class="w-full h-[700px] shadow"
-              img-class="object-cover">
+            <q-img :src="thumb((post.thumbnail as Attachment).data.path)" :alt="post.name"
+              class="w-full max-h-[70vh] aspect-video shadow" img-class="object-cover">
             </q-img>
           </div>
           <div class="flex flex-row justify-between flex-wrap items-center pb-4">
@@ -24,10 +24,7 @@
               {{ 'Pubblicato il ' + new Date(post.created_at).toLocaleDateString() }}
             </div>
           </div>
-          <div class="text-dark roboto-flex text-5xl select-none font-bold">
-            {{ post.name }}
-          </div>
-          <div class="roboto-flex text-lg py-8" v-html="post.content.data"></div>
+          <div class="roboto-flex text-lg py-8" v-html="sanitizedContent"></div>
         </div>
         <div class="border-l-4 border-blue-700 my-8">
           <WRelatedPosts :currentPostId="post.id" />
@@ -40,25 +37,35 @@
       <div class="select-none font-bold text-4xl text-dark roboto-flex">Post non esistente</div>
     </div>
   </div>
-  <div v-else class="flex flex-row justify-center items-center my-8">
-    <q-spinner color="primary" size="10em" :thickness="10"></q-spinner>
+  <div v-else class="flex flex-row justify-between items-start w-full bg-gray-100">
+    <div class="md:w-2/3 w-full px-8 py-4">
+      <ESkeleton height="40px" width="60%" class="my-4" rounded />
+      <ESkeleton height="min(70vh, 700px)" class="w-full my-4" rounded />
+      <ESkeleton height="20px" width="40%" class="my-4" rounded />
+      <ESkeleton height="120px" class="w-full my-4" rounded />
+    </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, inject } from 'vue';
+import { defineComponent } from 'vue';
+import sanitizeHtml from 'sanitize-html';
 
 import WRelatedPosts from '../Elements/ERelatedPosts.vue';
 import WShare from '../Elements/EShare.vue';
-import type { EventBus } from 'quasar';
-import type { UUID } from 'src/contracts/UUID';
-import type { Resource } from 'src/contracts/Resource';
-import type { Attachment } from 'src/contracts/Attachment';
+import ESkeleton from '../Elements/ESkeleton.vue';
+import { attachmentUrl, slugify } from '@/utils/format';
+import type { UUID } from '@/contracts/UUID';
+import type { Resource } from '@/contracts/Resource';
+import type { Attachment } from '@/contracts/Attachment';
+
+const SITE_URL = 'https://www.ienasoccer.it';
 
 export default defineComponent({
   name: 'WPost',
   components: {
     WRelatedPosts,
     WShare,
+    ESkeleton,
   },
   props: {
     post: {
@@ -77,34 +84,51 @@ export default defineComponent({
   },
   methods: {
     computedUrl(id: UUID, slug: string) {
-      return window.location.origin + '/post/' + id + '/' + slug;
+      return `${SITE_URL}/post/${id}/${slug}`;
     },
     computedThumb(thumb: string) {
-      return window.location.origin + thumb;
+      return attachmentUrl(thumb, 1280);
     },
-    slugify(str: string) {
-      return String(str)
-        .normalize('NFKD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9 -]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
-    },
+    slugify,
     thumb(url: string) {
-      const attachmentsBase =
-        process.env.NODE_ENV === 'production'
-          ? process.env.PRODUCTION_ATTACHMENTS_URL
-          : process.env.DEVELOPMENT_ATTACHMENTS_URL;
-
-      return `${attachmentsBase}${process.env.NODE_ENV === 'production' ? '/1280/' : '/'}${url}`;
+      return attachmentUrl(url, 1280);
+    },
+  },
+  computed: {
+    sanitizedContent(): string {
+      return sanitizeHtml(this.post.content.data, {
+        allowedTags: [
+          ...sanitizeHtml.defaults.allowedTags,
+          'figure',
+          'figcaption',
+          'h1',
+          'h2',
+          'img',
+          'source',
+          'video',
+        ],
+        allowedAttributes: {
+          ...sanitizeHtml.defaults.allowedAttributes,
+          '*': ['class'],
+          a: ['href', 'name', 'rel', 'target'],
+          img: ['alt', 'height', 'loading', 'src', 'title', 'width'],
+          source: ['src', 'type'],
+          video: ['controls', 'height', 'poster', 'preload', 'src', 'width'],
+        },
+        allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+        transformTags: {
+          a: (_tagName, attribs) => ({
+            tagName: 'a',
+            attribs: attribs.target === '_blank'
+              ? { ...attribs, rel: 'noopener noreferrer' }
+              : attribs,
+          }),
+        },
+      });
     },
   },
   data() {
     return {
-      bus: inject('bus') as EventBus,
-      data: {} as Resource<Attachment>,
       loaded: false,
     };
   },

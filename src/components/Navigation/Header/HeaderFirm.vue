@@ -7,13 +7,14 @@
         Iena Soccer
       </span>
       <div>
-        <a href="/" class="hidden lg:block">
+        <router-link to="/" class="hidden lg:block" aria-label="Vai alla homepage">
           <q-img
             src="/iena-logo.png"
             img-class="object-contain"
             class="px-4 w-24 h-full transform transition-all hover:rotate-12"
+            alt="Logo Iena Soccer"
           />
-        </a>
+        </router-link>
       </div>
     </div>
 
@@ -22,12 +23,13 @@
         flat
         class="flex flex-row justify-center items-center w-32 h-full"
         @click="toggleLeftDrawer"
+        aria-label="Apri il menu principale"
       >
         <div>
           <q-avatar icon="menu" class="lg:hidden" />
         </div>
         <div class="lg:hidden">
-          <q-img class="h-full w-8" src="/iena-logo.png" aria-label="Menu" />
+          <q-img class="h-full w-8" src="/iena-logo.png" alt="Logo Iena Soccer" />
         </div>
       </q-btn>
     </div>

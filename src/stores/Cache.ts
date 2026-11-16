@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { defineStore } from 'pinia';
-import type { CacheEntry } from 'src/contracts/Types';
+import type { CacheEntry } from '@/contracts/Types';
 
 export const useCacheStore = defineStore('cache', {
   state: () => ({

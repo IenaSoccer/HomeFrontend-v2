@@ -15,6 +15,8 @@
             round
             color="primary"
             target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Seguici su Facebook"
             href="https://www.facebook.com/people/Asd-Iena-Soccer-Academy-2014/100054428202395/"
             glossy
             icon="facebook"
@@ -23,6 +25,8 @@
             round
             color="amber"
             target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Seguici su Instagram"
             href="https://www.instagram.com/asdienasocceracademy2014/"
             glossy
             text-color="black"
@@ -32,6 +36,8 @@
             round
             color="purple"
             target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Seguici su TikTok"
             href="https://www.tiktok.com/@ienaforfuture"
             glossy
             icon="tiktok"

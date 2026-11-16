@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import type { NavItem } from 'src/contracts/Navbar';
+import type { NavItem } from '@/contracts/Navbar';
 import { defineComponent } from 'vue';
 
 export default defineComponent({

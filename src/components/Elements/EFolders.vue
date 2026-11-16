@@ -36,21 +36,29 @@
       <div class="font-bold text-4xl text-dark roboto-flex select-none">Non ci sono contenuti</div>
     </div>
   </div>
-  <div v-else class="flex flex-row justify-center items-center m-8">
-    <q-spinner color="primary" size="10em" :thickness="5"></q-spinner>
+  <div v-else class="flex flex-row flex-wrap justify-start items-center q-pa-md">
+    <ESkeleton v-for="k in 4" :key="k" width="256px" height="128px" class="m-4" rounded />
   </div>
 </template>
 <script lang="ts">
 import type { EventBus } from 'quasar';
-import type { Attachment } from 'src/contracts/Attachment';
-import type { Resource } from 'src/contracts/Resource';
-import type { UUID } from 'src/contracts/UUID';
-import { extractThumbnails } from 'src/resources/loader';
-import { useResourceStore } from 'src/stores/Resources';
+import type { Attachment } from '@/contracts/Attachment';
+import type { Resource } from '@/contracts/Resource';
+import type { UUID } from '@/contracts/UUID';
+import { extractThumbnails } from '@/resources/loader';
+import { useResourceStore } from '@/stores/Resources';
+import { attachmentUrl } from '@/utils/format';
 import { defineComponent, inject, ref } from 'vue';
+
+import ESkeleton from '@/components/Elements/ESkeleton.vue';
+
+const createThumbnailMap = (): Record<UUID, Attachment> => ({});
 
 export default defineComponent({
   name: 'WFolders',
+  components: {
+    ESkeleton,
+  },
   props: {
     folders: {
       type: {} as () => Resource<UUID>[],
@@ -62,9 +70,7 @@ export default defineComponent({
       immediate: true,
       async handler(n: Resource<UUID>[]) {
         await Promise.all(
-          n.map((folder: Resource<UUID>) => {
-            void this.useThumbnail(folder);
-          }),
+          n.map((folder: Resource<UUID>) => this.useThumbnail(folder)),
         );
         this.loaded = true;
       },
@@ -81,19 +87,14 @@ export default defineComponent({
       this.bus.emit('change-folder', f);
     },
     thumb(url: string) {
-      const attachmentsBase =
-        process.env.NODE_ENV === 'production'
-          ? process.env.PRODUCTION_ATTACHMENTS_URL
-          : process.env.DEVELOPMENT_ATTACHMENTS_URL;
-
-      return `${attachmentsBase}${process.env.NODE_ENV === 'production' ? '/800/' : '/'}${url}`;
+      return attachmentUrl(url, 800);
     },
   },
   data() {
     return {
       bus: inject('bus') as EventBus,
       loaded: false,
-      thumbnails: {} as Record<string, Attachment>,
+      thumbnails: createThumbnailMap(),
     };
   },
   setup() {

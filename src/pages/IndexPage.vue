@@ -6,10 +6,7 @@
           ref="Carosello"
           :mantainAspectRatio="false"
           :id="mappings.defaults['carosello']?.id"
-          :carousel="
-            resources['carosello']?.[Math.floor(Math.random() % resources['carosello']!.length)] ||
-            {}
-          "
+          :carousel="pickCarousel(resources['carosello'])"
           :currentSlide="0"
         />
         <ESocialBar />
@@ -77,18 +74,18 @@
 <script lang="ts">
 import { defineComponent, inject, reactive } from 'vue';
 
-import type { Mappings } from 'src/contracts/Mappings';
+import type { Mappings } from '@/contracts/Mappings';
 
-import WNews from 'components/Widgets/Mappable/WNews.vue';
-import WTeam from 'components/Widgets/Mappable/WTeam.vue';
-import WVideos from 'components/Widgets/Mappable/WVideos.vue';
-import WCarousel from 'components/Widgets/Mappable/WCarousel.vue';
-import ESectionWrapper from 'components/Elements/ESectionWrapper.vue';
-import ESocialBar from 'src/components/Elements/ESocialBar.vue';
+import WNews from '@/components/Widgets/Mappable/WNews.vue';
+import WTeam from '@/components/Widgets/Mappable/WTeam.vue';
+import WVideos from '@/components/Widgets/Mappable/WVideos.vue';
+import WCarousel from '@/components/Widgets/Mappable/WCarousel.vue';
+import ESectionWrapper from '@/components/Elements/ESectionWrapper.vue';
+import ESocialBar from '@/components/Elements/ESocialBar.vue';
 
 import { scroll, type EventBus } from 'quasar';
-import type { Resource } from 'src/contracts/Resource';
-import type { UUID } from 'src/contracts/UUID';
+import type { Resource } from '@/contracts/Resource';
+import type { UUID } from '@/contracts/UUID';
 
 export default defineComponent({
   name: 'IndexPage',
@@ -101,9 +98,7 @@ export default defineComponent({
     ESocialBar,
   },
 
-  $refs: {} as {
-    [key: string]: InstanceType<typeof WCarousel>;
-  },
+  $refs: {},
 
   data() {
     return {
@@ -115,7 +110,20 @@ export default defineComponent({
         resource: string,
       ) => Promise<Resource<UUID>[]>,
       loaded: false,
+      carouselIndex: null as number | null,
     };
+  },
+
+  methods: {
+    pickCarousel(list: Resource<UUID>[] | undefined): Resource<UUID> | undefined {
+      if (!list || list.length === 0) return undefined;
+
+      if (this.carouselIndex === null) {
+        this.carouselIndex = Math.floor(Math.random() * list.length);
+      }
+
+      return list[this.carouselIndex % list.length];
+    },
   },
 
   watch: {

@@ -27,7 +27,7 @@
       <div class="flex flex-row items-center py-4 contact-item hover-lift">
         <q-icon name="place" size="2em" color="primary" class="icon-bounce" />
         <div class="roboto-flex text-lg font-light text-gray-700 ml-4">
-          <a href="https://goo.gl/maps/z7AhbyLRAB1RUdr97" target="_blank" class="link-hover">https://goo.gl/maps/z7AhbyLRAB1RUdr97</a>
+          <a href="https://goo.gl/maps/z7AhbyLRAB1RUdr97" target="_blank" rel="noopener noreferrer" class="link-hover">Apri la sede su Google Maps</a>
         </div>
       </div>
     </q-card-section>

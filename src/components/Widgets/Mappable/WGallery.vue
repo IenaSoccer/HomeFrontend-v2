@@ -25,18 +25,19 @@
       </template>
     </q-splitter>
   </div>
-  <div v-else class="flex flex-row justify-center items-center m-8">
-    <q-spinner color="secondary" size="10em" :thickness="5"></q-spinner>
+  <div v-else class="flex flex-row flex-wrap justify-start items-center q-pa-md">
+    <ESkeleton v-for="k in 4" :key="k" width="256px" height="128px" class="m-4" rounded />
   </div>
 </template>
 <script lang="ts">
 import { defineComponent, inject } from 'vue';
 import { ref } from 'vue';
 
-import EAlbum from 'src/components/Elements/EAlbum.vue';
-import EFolders from 'src/components/Elements/EFolders.vue';
-import type { Resource } from 'src/contracts/Resource';
-import type { UUID } from 'src/contracts/UUID';
+import EAlbum from '@/components/Elements/EAlbum.vue';
+import EFolders from '@/components/Elements/EFolders.vue';
+import ESkeleton from '@/components/Elements/ESkeleton.vue';
+import type { Resource } from '@/contracts/Resource';
+import type { UUID } from '@/contracts/UUID';
 import type { EventBus } from 'quasar';
 
 export default defineComponent({
@@ -44,6 +45,7 @@ export default defineComponent({
   components: {
     EAlbum,
     EFolders,
+    ESkeleton,
   },
   mounted() {
     this.bus.on('change-folder', (f: Resource<UUID>) => {
@@ -55,6 +57,10 @@ export default defineComponent({
       type: {} as () => Resource<UUID>[],
       required: true,
     },
+    selectedAlbum: {
+      type: {} as () => Resource<UUID>,
+      default: () => ({}) as Resource<UUID>,
+    },
   },
   watch: {
     folders: {
@@ -64,6 +70,12 @@ export default defineComponent({
         this.loaded = true;
       }
     },
+    selectedAlbum: {
+      immediate: true,
+      handler(n: Resource<UUID>) {
+        if (n && n.id) this.selected = n;
+      },
+    },
   },
   data() {
     return {
@@ -71,10 +83,6 @@ export default defineComponent({
       selected: {} as Resource<UUID>,
       bus: inject('bus') as EventBus,
       loaded: false,
-      ensureResource: inject('ensureResource') as (
-        uuid: UUID,
-        resource: string,
-      ) => Promise<Resource<UUID>[]>,
     };
   },
   setup() {

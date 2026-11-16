@@ -7,7 +7,7 @@
     </q-dialog>
     <div class="flex flex-col flex-nowrap justify-center items-center roboto-flex">
       <div class="q-px-lg q-py-md select-none">
-        <q-timeline v-if="resources" :layout="layout" color="secondary">
+        <q-timeline v-if="history.length > 0" :layout="layout" color="secondary">
           <q-timeline-entry tag="h3" class="font-bold text-4xl tenada" heading>
             <span
               class="border-b-4 border-orange-600 transition transition-all hover:text-[#f3f4f6]"
@@ -65,8 +65,11 @@
       </div>
     </div>
   </div>
-  <div v-else class="flex flex-row justify-center items-center m-8">
-    <q-spinner color="primary" size="10em" :thickness="10"></q-spinner>
+  <div v-else class="flex flex-col flex-nowrap justify-center items-center q-px-lg q-py-md w-full">
+    <div v-for="k in 3" :key="k" class="flex flex-col gap-2 my-6 w-full max-w-[600px]">
+      <ESkeleton height="32px" width="45%" rounded />
+      <ESkeleton height="18px" width="80%" rounded />
+    </div>
   </div>
 </template>
 <style scoped>
@@ -79,19 +82,19 @@ video {
 }
 </style>
 <script lang="ts">
-import { defineComponent, inject } from 'vue';
+import { defineComponent } from 'vue';
 import { computed } from 'vue';
 import { useQuasar } from 'quasar';
-import type { EventBus } from 'quasar';
-import WCarousel from 'src/components/Widgets/Mappable/WCarousel.vue';
-import type { Resource } from 'src/contracts/Resource';
-import type { Attachment } from 'src/contracts/Attachment';
-import type { UUID } from 'src/contracts/UUID';
+import WCarousel from '@/components/Widgets/Mappable/WCarousel.vue';
+import ESkeleton from '@/components/Elements/ESkeleton.vue';
+import type { Resource } from '@/contracts/Resource';
+import type { UUID } from '@/contracts/UUID';
 
 export default defineComponent({
   name: 'WTimeline',
   components: {
     WCarousel,
+    ESkeleton,
   },
   props: {
     history: {
@@ -102,11 +105,8 @@ export default defineComponent({
   data() {
     return {
       show: false,
-      bus: inject('bus') as EventBus,
-      key: 0,
       loaded: false,
       carousel: {} as Resource<UUID>,
-      resources: [] as Resource<Attachment>[],
     };
   },
   mounted() {

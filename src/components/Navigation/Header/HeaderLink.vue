@@ -1,14 +1,15 @@
 <template>
   <div class="tenada lg:block hidden">
-    <q-toolbar class="text-[#f3f4f6] text-md">
+    <q-toolbar class="text-[#f3f4f6] text-md header-link-toolbar">
       <q-list dense>
         <q-item
           v-if="!item.embedded"
           clickable
           :class="{ hidden: item.nav_hidden }"
           tag="a"
-          class="xl:px-4 px-0 py-4"
+          class="xl:px-4 px-2 py-4 whitespace-nowrap"
           :to="item.link"
+          exact
         >
           <q-item-section>{{ item.title }}</q-item-section>
         </q-item>
@@ -17,8 +18,9 @@
           clickable
           :class="{ hidden: item.nav_hidden }"
           tag="a"
-          class="xl:px-4 px-0 py-4"
+          class="xl:px-4 px-2 py-4 whitespace-nowrap"
           :to="item.link"
+          exact
         >
           <q-item-section>{{ item.title }}</q-item-section>
         </q-item>
@@ -39,14 +41,30 @@ a:visited {
 a:active {
   color: orange;
 }
+
+.q-item {
+  color: #f3f4f6;
+  transition: color 0.2s ease;
+}
+
+.q-item:hover {
+  color: #239ced;
+}
+
+.q-item.q-router-link--active {
+  color: #239ced;
+  font-weight: 600;
+}
+
+.header-link-toolbar {
+  width: fit-content;
+  padding: 0;
+}
 </style>
 
 <script lang="ts">
-import type { EventBus } from 'quasar';
-import type { NavItem } from 'src/contracts/Navbar';
+import type { NavItem } from '@/contracts/Navbar';
 import { defineComponent } from 'vue';
-import { ref } from 'vue';
-import { inject } from 'vue';
 
 export default defineComponent({
   name: 'HeaderLink',
@@ -55,17 +73,6 @@ export default defineComponent({
       type: {} as () => NavItem,
       required: true,
     },
-  },
-  setup() {
-    const bus = inject('bus') as EventBus;
-
-    return {
-      model: ref('one'),
-      scrollEvent: function (slug: string) {
-        bus.emit('navigate-to', '/');
-        bus.emit('scroll-to', slug);
-      },
-    };
   },
 });
 </script>

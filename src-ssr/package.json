@@ -1,0 +1,21 @@
+{
+  "name": "homefrontend-ssr",
+  "version": "1.0.0",
+  "description": "Iena Soccer SSR server",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@10.9.4",
+  "dependencies": {
+    "compression": "^1.8.1",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.8.1",
+    "@types/express": "^5.0.6"
+  },
+  "engines": {
+    "node": "^22.22.0 || ^24 || ^26 || ^28 || >=30",
+    "npm": "^10.9.4"
+  }
+}

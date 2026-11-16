@@ -14,15 +14,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 
-import WContact from 'src/components/Widgets/WContact.vue';
+import WContact from '@/components/Widgets/WContact.vue';
 
 export default defineComponent({
   name: 'ContactPage',
   components: {
     WContact,
-  },
-  setup() {
-    return {};
   },
 });
 </script>

@@ -1,4 +1,4 @@
-import type { Links } from 'src/contracts/Navbar';
+import type { Links } from '@/contracts/Navbar';
 
 const links: Links = {
   header: [

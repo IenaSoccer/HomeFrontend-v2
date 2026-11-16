@@ -1,75 +1,93 @@
 <template>
   <div v-if="loaded">
-    <div class="q-pa-md pb-0 flex flex-row flex-wrap justify-start lg:justify-evenly items-center"
-      v-if="data.length > 0">
-      <div class="roboto-flex mx-4 self-start max-w-[300px] py-4">
-        <div class="text-2xl text-[#f3f4f6]">
-          {{ data[0]?.content.data[slide]?.data.name }}
+    <div v-if="data.length > 0" class="mx-auto max-w-[1200px] px-4 md:px-8">
+      <div class="grid overflow-hidden rounded-2xl border border-white/10 bg-[#121212]/85 shadow-[0_16px_40px_rgba(0,0,0,0.3)] lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        <div class="roboto-flex flex min-w-0 flex-col gap-4 p-6 text-[#f3f4f6] md:p-8">
+          <div class="h-1 w-12 rounded-full bg-[#239ced]"></div>
+          <h3 class="m-0 text-2xl font-bold leading-tight md:text-3xl">
+            {{ data[0]?.content.data[slide]?.data.name }}
+          </h3>
+          <p class="m-0 whitespace-pre-line text-base font-light leading-relaxed text-[#f3f4f6]/75">
+            {{ data[0]?.content.data[slide]?.data.description }}
+          </p>
+          <div v-if="data[0]?.attributes?.tags?.length" class="mt-auto flex flex-wrap gap-2 pt-2">
+            <q-btn
+              v-for="(tag, i) in data[0]?.attributes?.tags"
+              :key="i"
+              :label="'#' + tag"
+              flat
+              dense
+              no-caps
+              class="!rounded-full !bg-[#1e198f]/70 !px-3 !text-sm !font-normal !text-[#f3f4f6]"
+            />
+          </div>
         </div>
-        <span class="text-lg font-thin text-[#f3f4f6]">{{
-          data[0]?.content.data[slide]?.data.description
-          }}</span>
-      </div>
-      <q-carousel class="w-[700px]" swipeable animated v-model="slide" infinite>
-        <template #control>
-          <div class="absolute bottom-0 left-0 right-0 flex justify-between px-4 z-5">
-            <q-btn round dense size="xl" flat icon="navigate_before" @click="
+        <div class="min-w-0 bg-black/40">
+          <q-carousel class="!h-auto w-full aspect-video" swipeable animated v-model="slide" infinite>
+            <q-carousel-slide v-for="(single, k) in data[0]?.content?.data as Attachment[]" :key="single.id" class="bg-dark !p-0"
+              :name="k">
+              <video v-if="single.data.path.endsWith('.mp4')" :id="'video' + single.id" class="relative z-10 h-full w-full" muted
+                controls>
+                <source :src="thumb(single.data.path)" type="video/mp4" />
+              </video>
+              <img v-else :src="thumb(single.data.path)" :alt="single.data.name" class="relative z-10 h-full w-full object-contain object-center" />
+              <img v-if="single.data.path.endsWith('.jpg')" :src="thumb(single.data.path)"
+                alt="" aria-hidden="true" class="absolute top-0 left-0 z-0 h-full w-full object-cover blur-[5px]" />
+            </q-carousel-slide>
+          </q-carousel>
+          <div class="flex items-center justify-end gap-2 px-4 py-2 text-[#f3f4f6]">
+            <q-btn round dense flat icon="navigate_before" aria-label="Video precedente" @click="
               slide = data[0]?.content.data?.length
                 ? (slide - 1 + data[0]?.content.data!.length) % data[0]?.content?.data.length
                 : 0
-              " class="text-white" />
-            <q-btn round dense size="xl" flat icon="navigate_next" @click="
+              " />
+            <span class="roboto-flex text-sm font-normal text-[#f3f4f6]/70">{{ data[0]?.content.data?.length ? slide + 1 : 0 }} / {{ data[0]?.content.data?.length || 0 }}</span>
+            <q-btn round dense flat icon="navigate_next" aria-label="Video successivo" @click="
               slide = data[0]?.content.data?.length
                 ? (slide + 1) % data[0]?.content.data!.length
                 : 0
-              " class="text-white" />
+              " />
           </div>
-        </template>
-        <q-carousel-slide v-for="(single, k) in data[0]?.content?.data as Attachment[]" :key="single.id" class="bg-dark"
-          style="padding: 0 !important" :name="k">
-          <video v-if="single.data.path.endsWith('.mp4')" :id="'video' + single.id" class="w-full z-10 h-full" muted
-            controls>
-            <source :src="thumb(single.data.path)" type="video/mp4" />
-          </video>
-          <img v-else :src="thumb(single.data.path)" class="relative w-full h-full object-contain object-center !z-2" />
-          <img v-if="single.data.path.endsWith('.jpg')" :src="thumb(single.data.path)"
-            class="absolute top-0 left-0 z-0 w-full h-full object-cover" style="filter: blur(5px)" />
-        </q-carousel-slide>
-      </q-carousel>
+        </div>
+      </div>
     </div>
     <div v-else class="flex flex-row justify-center items-center h-[400px]">
       <div class="select-none font-bold text-4xl text-[#f3f4f6] roboto-flex">
         Non ci sono contenuti
       </div>
     </div>
-    <div class="bg-primary opacity-70 md:max-w-[30%] sm:max-w-[50%] w-full mt-12 self-end">
-      <div class="flex flex-row flex-nowrap justify-evenly px-4 items-center w-full text-[#f3f4f6] roboto-flex">
-        <q-btn square padding="md" :label="'#' + tag" flat v-for="(tag, i) in videos[slide]?.attributes?.tags" :key="i"
-          class="text-md font-thin">
-        </q-btn>
+  </div>
+  <div v-else class="mx-auto max-w-[1200px] px-4 md:px-8">
+    <div class="grid overflow-hidden rounded-2xl border border-white/10 bg-[#121212]/85 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+      <div class="flex flex-col gap-4 p-6 md:p-8">
+        <ESkeleton height="4px" width="48px" rounded />
+        <ESkeleton height="32px" width="70%" rounded />
+        <ESkeleton height="18px" rounded />
+        <ESkeleton height="18px" width="85%" rounded />
+      </div>
+      <div class="p-2">
+        <div class="aspect-video">
+          <ESkeleton rounded />
+        </div>
       </div>
     </div>
   </div>
-  <div v-else class="flex flex-row justify-center items-center m-8">
-    <q-spinner color="accent" size="10em" :thickness="10"></q-spinner>
-  </div>
 </template>
-<style scoped>
-.bg-back1 {
-  background: url('/backgrounds/background1.png') no-repeat top left;
-}
-</style>
 <script lang="ts">
-import type { EventBus } from 'quasar';
-import type { Attachment } from 'src/contracts/Attachment';
-import type { Mappings } from 'src/contracts/Mappings';
-import type { Resource } from 'src/contracts/Resource';
-import type { UUID } from 'src/contracts/UUID';
-import { downloadAttachments } from 'src/resources/loader';
-import { defineComponent, inject } from 'vue';
+import type { Attachment } from '@/contracts/Attachment';
+import type { Resource } from '@/contracts/Resource';
+import type { UUID } from '@/contracts/UUID';
+import { downloadAttachments } from '@/resources/loader';
+import { attachmentUrl } from '@/utils/format';
+import { defineComponent } from 'vue';
+
+import ESkeleton from '@/components/Elements/ESkeleton.vue';
 
 export default defineComponent({
   name: 'WVideos',
+  components: {
+    ESkeleton,
+  },
   props: {
     videos: {
       type: {} as () => Resource<UUID>[],
@@ -78,40 +96,31 @@ export default defineComponent({
   },
   watch: {
     videos: {
-      handler() {
+      async handler() {
         this.loaded = false;
+        this.data = [];
 
         if (this.videos.length === 0) {
           this.loaded = true;
           return;
         }
 
-        Promise.all(
-          this.videos.map(async (single) => {
-            this.data.push((await downloadAttachments(single)) as Resource<Attachment>);
-          }),
-        )
-          .then(() => {
-            this.loaded = true;
-          })
-          .catch(() => {
-            console.error('Error loading videos');
-          })
-          .finally(() => {
-            this.loaded = true;
-          });
+        try {
+          this.data = (await Promise.all(
+            this.videos.map((single) => downloadAttachments(single)),
+          )) as Resource<Attachment>[];
+        } catch {
+          console.error('Error loading videos');
+        } finally {
+          this.loaded = true;
+        }
       },
       immediate: true,
     },
   },
   methods: {
     thumb(url: string) {
-      const attachmentsBase =
-        process.env.NODE_ENV === 'production'
-          ? process.env.PRODUCTION_ATTACHMENTS_URL
-          : process.env.DEVELOPMENT_ATTACHMENTS_URL;
-
-      return `${attachmentsBase}/${url}`;
+      return attachmentUrl(url);
     },
   },
   data() {
@@ -119,8 +128,6 @@ export default defineComponent({
       slide: 0,
       loaded: false,
       data: [] as Resource<Attachment>[],
-      mappings: inject('mappings') as Mappings,
-      bus: inject('bus') as EventBus,
     };
   },
 });

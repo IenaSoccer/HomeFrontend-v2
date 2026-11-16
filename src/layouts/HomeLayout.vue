@@ -2,10 +2,8 @@
   <q-layout view="lHh Lpr lFf">
     <WAlert />
 
-    <q-intersection transition="fade">
-      <IHeader :navbar="headerLinks" />
-    </q-intersection>
-    <q-drawer class="bg-[#f4f5f6] roboto-flex" v-model="leftDrawerOpen" bordered>
+    <IHeader :navbar="headerLinks" />
+    <q-drawer class="bg-[#f4f5f6] roboto-flex" v-model="leftDrawerOpen" bordered aria-label="Menu principale">
       <q-list>
         <q-item-label header> Menu </q-item-label>
 
@@ -34,15 +32,15 @@ import { defineComponent } from 'vue';
 import { inject } from 'vue';
 import { useRoute } from 'vue-router';
 
-import IHeader from 'src/components/Navigation/Header.vue';
-import IFooter from 'src/components/Navigation/Footer.vue';
-import HeaderMobileLink from 'src/components/Navigation/Header/HeaderMobileLink.vue';
-import WAlert from 'src/components/Elements/EAlert.vue';
+import IHeader from '@/components/Navigation/Header.vue';
+import IFooter from '@/components/Navigation/Footer.vue';
+import HeaderMobileLink from '@/components/Navigation/Header/HeaderMobileLink.vue';
+import WAlert from '@/components/Elements/EAlert.vue';
 
-import links from 'src/collections/navbar';
-import type Globals from 'src/contracts/Globals';
+import links from '@/collections/navbar';
+import type Globals from '@/contracts/Globals';
 import { useMeta, type EventBus } from 'quasar';
-import { useMappingsStore } from 'src/stores/Mappings';
+import { useMappingsStore } from '@/stores/Mappings';
 
 const SITE_NAME = 'Iena Soccer';
 const SITE_URL = 'https://www.ienasoccer.it';
@@ -62,8 +60,23 @@ export default defineComponent({
   data: () => {
     return {
       globals: inject('globals') as Globals,
+      bus: inject('bus') as EventBus,
       leftDrawerOpen: false,
+      onSidebarToggle: null as (() => void) | null,
+      onNavigateTo: null as ((page: string) => void) | null,
     };
+  },
+  created() {
+    this.onSidebarToggle = () => {
+      this.leftDrawerOpen = !this.leftDrawerOpen;
+    };
+    this.onNavigateTo = (page: string) => {
+      if (this.globals.page !== page) void this.$router.push(page);
+    };
+  },
+  beforeUnmount() {
+    if (this.onSidebarToggle) this.bus.off('sidebar-toggle', this.onSidebarToggle);
+    if (this.onNavigateTo) this.bus.off('navigate-to', this.onNavigateTo);
   },
   watch: {
     $route(n) {
@@ -71,19 +84,15 @@ export default defineComponent({
     },
   },
   async mounted() {
-    const bus = inject('bus') as EventBus;
-
     this.globals.page = this.$route.path;
+    this.bus.on('sidebar-toggle', this.onSidebarToggle!);
+    this.bus.on('navigate-to', this.onNavigateTo!);
 
-    bus.emit('mappings:loaded', await useMappingsStore().list());
-
-    bus.on('sidebar-toggle', () => {
-      this.leftDrawerOpen = !this.leftDrawerOpen;
-    });
-
-    bus.on('navigate-to', (page: string) => {
-      if (this.globals.page !== page) void this.$router.push(page);
-    });
+    try {
+      this.bus.emit('mappings:loaded', await useMappingsStore().list());
+    } catch (error) {
+      console.error('Impossibile caricare le associazioni del sito', error);
+    }
   },
   setup() {
     const route = useRoute();

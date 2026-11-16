@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia';
-import { extractBody } from 'src/resources/loader';
+import { extractBody } from '@/resources/loader';
 import type { AxiosResponse } from 'axios';
-import type { Alert } from 'src/contracts/Alert';
-import type { ApiResponse } from 'src/contracts/ApiResponse';
-import api from 'src/utils/api';
+import type { Alert } from '@/contracts/Alert';
+import type { ApiResponse } from '@/contracts/ApiResponse';
+import api from '@/utils/api';
 
 interface AlertsState {
   items: Alert[];

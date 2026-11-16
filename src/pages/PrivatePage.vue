@@ -12,13 +12,13 @@
 </template>
 <script lang="ts">
 import { defineComponent, inject, reactive } from 'vue';
-import WGallery from 'src/components/Widgets/Mappable/WGallery.vue';
-import type { Mappings } from 'src/contracts/Mappings';
-import { useResourceStore } from 'src/stores/Resources';
+import WGallery from '@/components/Widgets/Mappable/WGallery.vue';
+import type { Mappings } from '@/contracts/Mappings';
+import { useResourceStore } from '@/stores/Resources';
 import type { EventBus } from 'quasar';
-import type { Folder } from 'src/contracts/Folder';
-import type { Resource } from 'src/contracts/Resource';
-import type { UUID } from 'src/contracts/UUID';
+import type { Folder } from '@/contracts/Folder';
+import type { Resource } from '@/contracts/Resource';
+import type { UUID } from '@/contracts/UUID';
 
 export default defineComponent({
   name: 'PrivatePage',
@@ -53,7 +53,7 @@ export default defineComponent({
     return {
       mappings: reactive(inject('mappings') as Mappings),
       page: {
-        mapping: '' as string,
+        mapping: '',
         album: {} as Folder,
         folders: [] as Resource<UUID>[],
       },

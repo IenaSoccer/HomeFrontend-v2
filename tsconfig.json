@@ -1,26 +1,3 @@
 {
-  "extends": "./.quasar/tsconfig.json",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "noImplicitAny": false,
-    "paths": {
-      "#q-app": ["./node_modules/@quasar/app-vite/types/index.d.ts"],
-      "#q-app/wrappers": ["./node_modules/@quasar/app-vite/types/app-wrappers.d.ts"],
-      "#components/*": ["src/components/*"],
-      "#layouts/*": ["src/layouts/*"],
-      "#pages/*": ["src/pages/*"],
-      "#boot/*": ["src/boot/*"]
-    },
-    "types": ["quasar"]
-  },
-  "include": [
-    ".quasar/**/*.ts",
-    ".quasar/**/*.d.ts",
-    "quasar.config.ts",
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.vue",
-    "src-ssr/**/*.ts"
-  ],
-  "typeRoots": ["./node_modules/@types", "./.quasar"]
+  "extends": "./.quasar/tsconfig.json"
 }

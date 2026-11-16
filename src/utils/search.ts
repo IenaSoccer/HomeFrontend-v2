@@ -1,11 +1,15 @@
-import type { Attachment } from 'src/contracts/Attachment';
-import type { Folder } from 'src/contracts/Folder';
-import type { Resource } from 'src/contracts/Resource';
+import type { Attachment } from '@/contracts/Attachment';
+import type { Folder } from '@/contracts/Folder';
+import type { Resource } from '@/contracts/Resource';
 
 type Searchable = Resource | Attachment | Folder;
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function search<T extends Searchable>(blob: T[], query: string): T[] {
-  const regExp = new RegExp(query, 'gi');
+  const regExp = new RegExp(escapeRegExp(query), 'i');
 
   const check = (obj: Searchable): boolean => {
     if (obj === null || obj === undefined) return false;

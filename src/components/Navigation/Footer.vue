@@ -25,12 +25,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 
-import FooterLink from 'src/components/Navigation/Footer/FooterLink.vue';
-import FooterFirm from 'src/components/Navigation/Footer/FooterFirm.vue';
-import LanguageBar from 'src/components/Navigation/Footer/LanguageBar.vue';
-import CopyrightBar from 'src/components/Navigation/Footer/CopyrightBar.vue';
-import IMap from 'src/components/Navigation/Footer/Map.vue';
-import type { FooterLinks } from 'src/contracts/Navbar';
+import FooterLink from '@/components/Navigation/Footer/FooterLink.vue';
+import FooterFirm from '@/components/Navigation/Footer/FooterFirm.vue';
+import LanguageBar from '@/components/Navigation/Footer/LanguageBar.vue';
+import CopyrightBar from '@/components/Navigation/Footer/CopyrightBar.vue';
+import IMap from '@/components/Navigation/Footer/Map.vue';
+import type { FooterLinks } from '@/contracts/Navbar';
 
 export default defineComponent({
   name: 'IFooter',

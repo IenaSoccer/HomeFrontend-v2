@@ -2,15 +2,12 @@
 /* eslint-disable @typescript-eslint/prefer-promise-reject-errors */
 
 import axios from 'axios';
-import { useCacheStore } from 'src/stores/Cache';
+import { useCacheStore } from '@/stores/Cache';
 
-const apiBaseURL =
-  process.env.NODE_ENV === 'production'
-    ? process.env.PRODUCTION_API_URL
-    : process.env.DEVELOPMENT_API_URL;
+const apiBaseURL = import.meta.env.QCLI_API_URL;
 
 if (!apiBaseURL) {
-  throw new Error('Missing API base URL env var for current NODE_ENV');
+  throw new Error('Missing QCLI_API_URL environment variable');
 }
 
 const api = axios.create({

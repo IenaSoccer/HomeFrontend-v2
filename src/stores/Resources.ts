@@ -1,41 +1,56 @@
 import { defineStore } from 'pinia';
-import { extractBody } from 'src/resources/loader';
+import { extractBody } from '@/resources/loader';
 import type { AxiosResponse } from 'axios';
-import type { Resource } from 'src/contracts/Resource';
-import type { Folder } from 'src/contracts/Folder';
-import type { Attachment } from 'src/contracts/Attachment';
-import type { UUID } from 'src/contracts/UUID';
-import type { ApiResponse } from 'src/contracts/ApiResponse';
-import api from 'src/utils/api';
+import type { Resource } from '@/contracts/Resource';
+import type { Folder } from '@/contracts/Folder';
+import type { Attachment } from '@/contracts/Attachment';
+import type { UUID } from '@/contracts/UUID';
+import type { ApiResponse } from '@/contracts/ApiResponse';
+import api from '@/utils/api';
 
 interface ResourceState {
   _searchable: Resource[];
-  _names: Folder[];
+  _names: Record<UUID, string>;
 }
+
+let pendingContent: Promise<Resource[]> | null = null;
 
 export const useResourceStore = defineStore('resource', {
   state: (): ResourceState => ({
     _searchable: [],
-    _names: [],
+    _names: {},
   }),
 
   actions: {
     async getContent(): Promise<Resource[]> {
-      this._names = await this.list();
+      if (this._searchable.length > 0) return this._searchable;
 
-      await Promise.all(
-        Object.entries(this._names).map(async ([key]) => {
-          const item = await this.fetch(key);
-          this._searchable.push(item.pop() as Resource);
-        }),
-      );
+      pendingContent ??= (async () => {
+        this._names = await this.list();
 
-      return this._searchable;
+        const resources = await Promise.all(
+          Object.keys(this._names).map(async (fid) => {
+            try {
+              return await this.fetch(fid);
+            } catch {
+              return [] as Resource<UUID, UUID[] | string>[];
+            }
+          }),
+        );
+
+        this._searchable = resources.flat() as Resource[];
+
+        return this._searchable;
+      })().finally(() => {
+        pendingContent = null;
+      });
+
+      return pendingContent;
     },
 
-    async list(): Promise<Folder[]> {
+    async list(): Promise<Record<UUID, string>> {
       const response: AxiosResponse<ApiResponse> = await api.get(`/folders`);
-      return extractBody<Folder[]>(response);
+      return extractBody<Record<UUID, string>>(response);
     },
 
     async listWithHash(hash: string): Promise<Folder> {

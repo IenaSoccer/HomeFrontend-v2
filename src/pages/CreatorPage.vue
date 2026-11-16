@@ -6,12 +6,14 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, onMounted } from 'vue';
 
 export default defineComponent({
   name: 'CreatorPage',
   setup() {
-    window.location.href = 'https://mgmt.ienasoccer.it';
+    onMounted(() => {
+      window.location.replace('https://mgmt.ienasoccer.it');
+    });
   },
 });
 </script>

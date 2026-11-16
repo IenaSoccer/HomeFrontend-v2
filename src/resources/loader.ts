@@ -1,18 +1,19 @@
 import type { AxiosResponse } from 'axios';
-import type { Alert } from 'src/contracts/Alert';
-import type { ApiResponse } from 'src/contracts/ApiResponse';
-import type { Attachment } from 'src/contracts/Attachment';
-import type { Folder } from 'src/contracts/Folder';
-import type { Mappings } from 'src/contracts/Mappings';
-import type { Resource } from 'src/contracts/Resource';
-import type { UUID } from 'src/contracts/UUID';
-import { useResourceStore } from 'src/stores/Resources';
+import type { Alert } from '@/contracts/Alert';
+import type { ApiResponse } from '@/contracts/ApiResponse';
+import type { Attachment } from '@/contracts/Attachment';
+import type { Folder } from '@/contracts/Folder';
+import type { Mappings } from '@/contracts/Mappings';
+import type { Resource } from '@/contracts/Resource';
+import type { UUID } from '@/contracts/UUID';
+import { useResourceStore } from '@/stores/Resources';
 
 type ResourceStore = ReturnType<typeof useResourceStore>;
 type Extractable =
   | Attachment
   | Folder
   | Folder[]
+  | Record<UUID, string>
   | Resource<UUID, UUID[]>
   | Resource<UUID, UUID[]>[]
   | Alert[]
