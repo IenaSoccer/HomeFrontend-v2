@@ -43,7 +43,7 @@ jobs:
       - name: Verify and package
         run: |
           set -Eeuo pipefail
-          npm install --global npm@10.9.4 --ignore-scripts
+          npm install --global npm@11.21.2 --ignore-scripts
           npm ci --ignore-scripts
           npm --prefix src-ssr ci --ignore-scripts
           npm run postinstall

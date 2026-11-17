@@ -28,7 +28,7 @@ jobs:
             package-lock.json
             src-ssr/package-lock.json
             deploy/ssr-package-lock.json
-      - run: npm install --global npm@10.9.4 --ignore-scripts
+      - run: npm install --global npm@11.21.2 --ignore-scripts
       - run: npm ci --ignore-scripts
       - run: npm --prefix src-ssr ci --ignore-scripts
       - run: npm run postinstall

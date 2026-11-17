@@ -6,7 +6,7 @@
   "author": "ErPaciocco <erpaciocco.smhacko@protonmail.com>",
   "type": "module",
   "private": true,
-  "packageManager": "npm@10.9.4",
+  "packageManager": "npm@11.21.2",
   "scripts": {
     "type-check": "vue-tsc --noEmit --project tsconfig.json",
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
@@ -22,36 +22,37 @@
   "dependencies": {
     "@quasar/extras": "^2.1.0",
     "@splidejs/vue-splide": "^0.6.12",
-    "axios": "^1.13.2",
-    "pinia": "^3.0.1",
-    "quasar": "^2.35.4",
-    "sanitize-html": "^2.17.0",
-    "vue": "^3.5.22",
+    "axios": "^1.21.1",
+    "mitt": "^3.0.1",
+    "pinia": "^4.1.0",
+    "quasar": "^2.35.5",
+    "sanitize-html": "^2.18.2",
+    "vue": "^3.5.45",
     "vue-router": "^5.5.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.14.0",
+    "@eslint/js": "^10.0.1",
     "@quasar/app-vite": "^3.10.4",
-    "@tailwindcss/postcss": "^4.1.12",
-    "@tailwindcss/vite": "^4.2.2",
+    "@tailwindcss/postcss": "^4.3.5",
+    "@tailwindcss/vite": "^4.3.5",
     "@types/node": "^22.20.5",
     "@types/sanitize-html": "^2.16.2",
-    "@vue/eslint-config-prettier": "^10.1.0",
+    "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.9.0",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9.14.0",
+    "autoprefixer": "^10.6.2",
+    "eslint": "^10.15.0",
     "eslint-plugin-vue": "^10.12.1",
-    "globals": "^16.4.0",
-    "postcss": "^8.5.6",
-    "prettier": "^3.3.3",
-    "tailwindcss": "^4.1.12",
-    "typescript": "~5.9.2",
-    "vite-plugin-checker": "^0.11.0",
-    "vue-eslint-parser": "^10.2.0",
-    "vue-tsc": "^3.0.7"
+    "globals": "^17.14.0",
+    "postcss": "^8.5.33",
+    "prettier": "^3.10.1",
+    "tailwindcss": "^4.3.5",
+    "typescript": "~5.9.3",
+    "vite-plugin-checker": "^1.0.0",
+    "vue-eslint-parser": "^10.4.2",
+    "vue-tsc": "^3.3.14"
   },
   "engines": {
     "node": "^22.22.0 || ^24 || ^26 || ^28 || >=30",
-    "npm": "^10.9.4"
+    "npm": "^11.21.2"
   }
 }

@@ -4,7 +4,7 @@
   "description": "Iena Soccer SSR server",
   "private": true,
   "type": "module",
-  "packageManager": "npm@10.9.4",
+  "packageManager": "npm@11.21.2",
   "dependencies": {
     "compression": "^1.8.1",
     "express": "^5.2.1",
@@ -16,6 +16,6 @@
   },
   "engines": {
     "node": "^22.22.0 || ^24 || ^26 || ^28 || >=30",
-    "npm": "^10.9.4"
+    "npm": "^11.21.2"
   }
 }
