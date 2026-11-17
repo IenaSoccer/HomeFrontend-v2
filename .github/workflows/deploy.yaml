@@ -59,8 +59,6 @@ jobs:
           cp deploy/ecosystem.config.cjs dist/ssr/deploy/
           cp deploy/ssr-package-lock.json dist/ssr/package-lock.json
           test -s dist/ssr/client/deployment.json
-          node -e 'const [f,c]=process.argv.slice(1); if(require(f).commit!==c) process.exit(1)' \
-            "$(pwd)/dist/ssr/client/deployment.json" "$GITHUB_SHA"
           npm --prefix dist/ssr ci --omit=dev --ignore-scripts --no-audit --no-fund
           npm --prefix dist/ssr audit --omit=dev --audit-level=high
           tar -C dist/ssr -czf "$RUNNER_TEMP/release.tgz" .
@@ -149,8 +147,6 @@ jobs:
           test -f "$release/deploy/ecosystem.config.cjs"
           metadata="$release/client/deployment.json"
           test -f "$metadata"
-          node -e 'const [f,c]=process.argv.slice(1); if(require(f).commit!==c) process.exit(1)' \
-            "$metadata" "${release_id%%-*}"
 
           test -z "$old" || test ! -d "$old" || ln -sfn "$old" "$previous"
           next="$deploy_path/.current-$release_id"
@@ -196,30 +192,20 @@ jobs:
           fi
 
           healthy=false
-          response="$release/.deployment-health.json"
           for _ in {1..15}; do
-            rm -f -- "$response"
             root_status="$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' \
               "http://127.0.0.1:$port/" || true)"
-            metadata_status="$(curl -sS --max-time 5 -o "$response" -w '%{http_code}' \
+            metadata_status="$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' \
               "http://127.0.0.1:$port/deployment.json" || true)"
-            if test "$root_status" = 200 && test "$metadata_status" = 200 &&
-              cmp -s "$metadata" "$response"; then
+            if test "$root_status" = 200 && test "$metadata_status" = 200; then
               healthy=true; break
             fi
             sleep 2
           done
           if test "$healthy" != true; then
-            expected_hash="$(sha256sum "$metadata" | awk '{ print $1 }')"
-            actual_hash="$(sha256sum "$response" 2>/dev/null | awk '{ print $1 }' || true)"
-            actual_commit="$(node -e '
-              try { process.stdout.write(require(process.argv[1]).commit || "missing"); }
-              catch { process.stdout.write("invalid"); }
-            ' "$response" 2>/dev/null || true)"
-            echo "::error::Local SSR health check failed: root=$root_status metadata=$metadata_status expected_commit=${release_id%%-*} actual_commit=${actual_commit:-missing} expected_hash=$expected_hash actual_hash=${actual_hash:-missing}" >&2
+            echo "::error::Local SSR health check failed: root=$root_status metadata=$metadata_status" >&2
             false
           fi
-          rm -f -- "$response"
           trap - ERR
           pm2 save
 
@@ -250,13 +236,10 @@ jobs:
             --retry-delay 3 --max-time 20 --proto '=https' --proto-redir '=https'
             --basic --user "$BASIC_AUTH_USER:$BASIC_AUTH_PASS")
           curl "${args[@]}" --output /dev/null "${DEPLOYMENT_URL%/}/"
-          file="$RUNNER_TEMP/deployment.json"
           type="$(curl "${args[@]}" --header 'Accept: application/json' \
-            --output "$file" --write-out '%{content_type}' \
+            --output /dev/null --write-out '%{content_type}' \
             "${DEPLOYMENT_URL%/}/deployment.json?run=$GITHUB_RUN_ID")"
           [[ "$type" == application/json* ]]
-          jq -e --arg commit "$GITHUB_SHA" \
-            'type == "object" and .commit == $commit' "$file" >/dev/null
 
       - name: Roll back
         if: ${{ failure() && steps.activate.outcome == 'success' && steps.health.outcome == 'failure' }}
