@@ -50,13 +50,17 @@ jobs:
           npm test
           npm audit --omit=dev --audit-level=high
           npm --prefix src-ssr audit --omit=dev --audit-level=high
+          printf '{"commit":"%s","run_id":"%s"}\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" \
+            > public/deployment.json
           npm run build:ssr
+          rm -f -- public/deployment.json
 
           mkdir -p dist/ssr/deploy
           cp deploy/ecosystem.config.cjs dist/ssr/deploy/
           cp deploy/ssr-package-lock.json dist/ssr/package-lock.json
-          printf '{"commit":"%s","run_id":"%s"}\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" \
-            > dist/ssr/client/deployment.json
+          test -s dist/ssr/client/deployment.json
+          node -e 'const [f,c]=process.argv.slice(1); if(require(f).commit!==c) process.exit(1)' \
+            "$(pwd)/dist/ssr/client/deployment.json" "$GITHUB_SHA"
           npm --prefix dist/ssr ci --omit=dev --ignore-scripts --no-audit --no-fund
           npm --prefix dist/ssr audit --omit=dev --audit-level=high
           tar -C dist/ssr -czf "$RUNNER_TEMP/release.tgz" .
@@ -155,36 +159,48 @@ jobs:
           mv -Tf -- "$next" "$current"
 
           export PM2_APP_NAME="$app_name" PM2_INSTANCES="$instances" SSR_PORT="$port"
-          export DEPLOY_CURRENT_PATH="$current"
+          export DEPLOY_CURRENT_PATH="$release"
           rollback() {
             if test -n "$old" && test -d "$old"; then
               rollback_link="$deploy_path/.rollback-$release_id"
               rm -f -- "$rollback_link"
               ln -s "$old" "$rollback_link"
               mv -Tf -- "$rollback_link" "$current"
-              pm2 startOrGracefulReload "$current/deploy/ecosystem.config.cjs" \
+              export DEPLOY_CURRENT_PATH="$old"
+              pm2 startOrGracefulReload "$old/deploy/ecosystem.config.cjs" \
                 --only "$app_name" --update-env || true
             fi
           }
           trap rollback ERR
 
           if pm2 describe "$app_name" >/dev/null 2>&1; then
-            pm2 startOrGracefulReload "$current/deploy/ecosystem.config.cjs" \
+            pm2 startOrGracefulReload "$release/deploy/ecosystem.config.cjs" \
               --only "$app_name" --update-env
           else
-            pm2 start "$current/deploy/ecosystem.config.cjs" --only "$app_name"
+            pm2 start "$release/deploy/ecosystem.config.cjs" --only "$app_name"
           fi
 
           healthy=false
+          response="$release/.deployment-health.json"
           for _ in {1..15}; do
-            if curl -fsS --max-time 5 "http://127.0.0.1:$port/" >/dev/null &&
-              curl -fsS --max-time 5 "http://127.0.0.1:$port/deployment.json" |
-                cmp -s "$metadata" -; then
+            rm -f -- "$response"
+            root_status="$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' \
+              "http://127.0.0.1:$port/" || true)"
+            metadata_status="$(curl -sS --max-time 5 -o "$response" -w '%{http_code}' \
+              "http://127.0.0.1:$port/deployment.json" || true)"
+            if test "$root_status" = 200 && test "$metadata_status" = 200 &&
+              cmp -s "$metadata" "$response"; then
               healthy=true; break
             fi
             sleep 2
           done
-          test "$healthy" = true
+          if test "$healthy" != true; then
+            expected_hash="$(sha256sum "$metadata" | awk '{ print $1 }')"
+            actual_hash="$(sha256sum "$response" 2>/dev/null | awk '{ print $1 }' || true)"
+            echo "::error::Local SSR health check failed: root=$root_status metadata=$metadata_status expected=$expected_hash actual=${actual_hash:-missing}" >&2
+            false
+          fi
+          rm -f -- "$response"
           trap - ERR
           pm2 save
 
@@ -240,8 +256,8 @@ jobs:
           ln -s "$target" "$rollback"
           mv -Tf -- "$rollback" "$deploy_path/current"
           export PM2_APP_NAME="$app_name" PM2_INSTANCES="$instances" SSR_PORT="$port"
-          export DEPLOY_CURRENT_PATH="$deploy_path/current"
-          pm2 startOrGracefulReload "$deploy_path/current/deploy/ecosystem.config.cjs" \
+          export DEPLOY_CURRENT_PATH="$target"
+          pm2 startOrGracefulReload "$target/deploy/ecosystem.config.cjs" \
             --only "$app_name" --update-env
           REMOTE
 
