@@ -24,6 +24,18 @@ function isRouteNotFoundError(error: unknown): error is SsrRenderRouteNotFoundEr
 export default defineSsrMiddleware(({ app, resolve, render, serve }) => {
   // we capture any other Express route and hand it
   // over to Vue and Vue Router to render our page
+
+
+  app.get(resolve.urlPath('serve-deployment.json'), (req, res) => {
+    res.set({
+      'Content-Type': 'application/json; charset=utf-8',
+      'X-Frame-Options': 'SAMEORIGIN',
+      'Cache-Control': 'no-store',
+      'Pragma': 'no-cache'
+    });
+    res.sendFile(resolve.public('deployment.json'));
+  });
+
   app.get(resolve.urlPath('{*path}'), async (req, res) => {
     res.set({
       'Content-Type': 'text/html; charset=utf-8',

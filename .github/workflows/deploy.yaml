@@ -145,7 +145,7 @@ jobs:
           rm -f -- "$archive"
           test -f "$release/index.js"
           test -f "$release/deploy/ecosystem.config.cjs"
-          metadata="$release/client/deployment.json"
+          metadata="$release/client/serve-deployment.json"
           test -f "$metadata"
 
           test -z "$old" || test ! -d "$old" || ln -sfn "$old" "$previous"
@@ -196,7 +196,7 @@ jobs:
             root_status="$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' \
               "http://127.0.0.1:$port/" || true)"
             metadata_status="$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' \
-              "http://127.0.0.1:$port/deployment.json" || true)"
+              "http://127.0.0.1:$port/serve-deployment.json" || true)"
             if test "$root_status" = 200 && test "$metadata_status" = 200; then
               healthy=true; break
             fi
@@ -238,7 +238,7 @@ jobs:
           curl "${args[@]}" --output /dev/null "${DEPLOYMENT_URL%/}/"
           type="$(curl "${args[@]}" --header 'Accept: application/json' \
             --output /dev/null --write-out '%{content_type}' \
-            "${DEPLOYMENT_URL%/}/deployment.json?run=$GITHUB_RUN_ID")"
+            "${DEPLOYMENT_URL%/}/serve-deployment.json?run=$GITHUB_RUN_ID")"
           [[ "$type" == application/json* ]]
 
       - name: Roll back
