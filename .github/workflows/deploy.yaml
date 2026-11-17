@@ -119,7 +119,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           checksum="$(sha256sum "$RUNNER_TEMP/release.tgz" | awk '{ print $1 }')"
-          ssh ienavps-home "mkdir -p -- '$DEPLOY_PATH/incoming' '$DEPLOY_PATH/releases'"
+          ssh ienavps-home "mkdir -p -- '$DEPLOY_PATH/incoming' '$DEPLOY_PATH/releases' '$DEPLOY_PATH/logs'"
           scp "$RUNNER_TEMP/release.tgz" "ienavps-home:$DEPLOY_PATH/incoming/$RELEASE_ID.tgz"
 
           ssh ienavps-home bash -s -- "$DEPLOY_PATH" "$RELEASE_ID" "$checksum" \
@@ -159,7 +159,7 @@ jobs:
           mv -Tf -- "$next" "$current"
 
           export PM2_APP_NAME="$app_name" PM2_INSTANCES="$instances" SSR_PORT="$port"
-          export DEPLOY_CURRENT_PATH="$release"
+          export DEPLOY_ROOT_PATH="$deploy_path" DEPLOY_CURRENT_PATH="$release"
           rollback() {
             if test -n "$old" && test -d "$old"; then
               rollback_link="$deploy_path/.rollback-$release_id"
@@ -174,8 +174,23 @@ jobs:
           trap rollback ERR
 
           if pm2 describe "$app_name" >/dev/null 2>&1; then
-            pm2 startOrGracefulReload "$release/deploy/ecosystem.config.cjs" \
-              --only "$app_name" --update-env
+            pm2_cwd="$(pm2 jlist | node -e '
+              let input = "";
+              process.stdin.setEncoding("utf8");
+              process.stdin.on("data", chunk => { input += chunk; });
+              process.stdin.on("end", () => {
+                const app = JSON.parse(input).find(item => item.name === process.argv[1]);
+                process.stdout.write(app?.pm2_env?.pm_cwd || "");
+              });
+            ' "$app_name")"
+            if test "$pm2_cwd" = "$deploy_path"; then
+              pm2 startOrGracefulReload "$release/deploy/ecosystem.config.cjs" \
+                --only "$app_name" --update-env
+            else
+              echo "Migrating $app_name to the stable deployment entrypoint"
+              pm2 delete "$app_name"
+              pm2 start "$release/deploy/ecosystem.config.cjs" --only "$app_name"
+            fi
           else
             pm2 start "$release/deploy/ecosystem.config.cjs" --only "$app_name"
           fi
@@ -197,7 +212,11 @@ jobs:
           if test "$healthy" != true; then
             expected_hash="$(sha256sum "$metadata" | awk '{ print $1 }')"
             actual_hash="$(sha256sum "$response" 2>/dev/null | awk '{ print $1 }' || true)"
-            echo "::error::Local SSR health check failed: root=$root_status metadata=$metadata_status expected=$expected_hash actual=${actual_hash:-missing}" >&2
+            actual_commit="$(node -e '
+              try { process.stdout.write(require(process.argv[1]).commit || "missing"); }
+              catch { process.stdout.write("invalid"); }
+            ' "$response" 2>/dev/null || true)"
+            echo "::error::Local SSR health check failed: root=$root_status metadata=$metadata_status expected_commit=${release_id%%-*} actual_commit=${actual_commit:-missing} expected_hash=$expected_hash actual_hash=${actual_hash:-missing}" >&2
             false
           fi
           rm -f -- "$response"
@@ -256,7 +275,7 @@ jobs:
           ln -s "$target" "$rollback"
           mv -Tf -- "$rollback" "$deploy_path/current"
           export PM2_APP_NAME="$app_name" PM2_INSTANCES="$instances" SSR_PORT="$port"
-          export DEPLOY_CURRENT_PATH="$target"
+          export DEPLOY_ROOT_PATH="$deploy_path" DEPLOY_CURRENT_PATH="$target"
           pm2 startOrGracefulReload "$target/deploy/ecosystem.config.cjs" \
             --only "$app_name" --update-env
           REMOTE
