@@ -195,15 +195,18 @@ jobs:
           for _ in {1..15}; do
             root_status="$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' \
               "http://127.0.0.1:$port/" || true)"
-            metadata_status="$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' \
+            metadata_result="$(curl -sS --max-time 5 -o /dev/null \
+              -w $'%{http_code}\t%{content_type}' \
               "http://127.0.0.1:$port/serve-deployment" || true)"
-            if test "$root_status" = 200 && test "$metadata_status" = 200; then
+            IFS=$'\t' read -r metadata_status metadata_type <<< "$metadata_result"
+            if test "$root_status" = 200 && test "$metadata_status" = 200 &&
+              [[ "$metadata_type" == application/json* ]]; then
               healthy=true; break
             fi
             sleep 2
           done
           if test "$healthy" != true; then
-            echo "::error::Local SSR health check failed: root=$root_status metadata=$metadata_status" >&2
+            echo "::error::Local SSR health check failed: root=$root_status metadata=$metadata_status type=${metadata_type:-missing}" >&2
             false
           fi
           trap - ERR

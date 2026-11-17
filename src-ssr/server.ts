@@ -74,7 +74,7 @@ export const create = defineSsrCreate(async (/* { ... } */) => {
   }
 
   const deploymentFile = join(import.meta.dirname, 'client', 'deployment.json');
-  app.get('/deployment.json', (_req, res) => {
+  app.get('/serve-deployment', (_req, res) => {
     res.set({
       'Cache-Control': 'no-store, no-cache, must-revalidate',
       'Content-Type': 'application/json; charset=utf-8',

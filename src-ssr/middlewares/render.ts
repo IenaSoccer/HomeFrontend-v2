@@ -24,28 +24,6 @@ function isRouteNotFoundError(error: unknown): error is SsrRenderRouteNotFoundEr
 export default defineSsrMiddleware(({ app, resolve, render, serve }) => {
   // we capture any other Express route and hand it
   // over to Vue and Vue Router to render our page
-
-
-  app.get(resolve.urlPath('/serve-deployment'), (_req, res) => {
-    res.set({
-      'Content-Type': 'application/json; charset=utf-8',
-      'X-Content-Type-Options': 'nosniff',
-      'Cache-Control': 'no-store, no-cache, must-revalidate',
-    });
-
-    res.sendFile(resolve.public('deployment.json'), (error) => {
-      if (!error) return;
-
-      if (res.headersSent) {
-        res.end();
-        return;
-      }
-
-      const statusCode = 'code' in error && error.code === 'ENOENT' ? 404 : 500;
-      res.status(statusCode).json({ error: 'Deployment metadata unavailable' });
-    });
-  });
-
   app.get(resolve.urlPath('{*path}'), async (req, res) => {
     res.set({
       'Content-Type': 'text/html; charset=utf-8',
