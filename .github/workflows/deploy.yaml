@@ -196,7 +196,7 @@ jobs:
             root_status="$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' \
               "http://127.0.0.1:$port/" || true)"
             metadata_status="$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' \
-              "http://127.0.0.1:$port/deployment.json" || true)"
+              "http://127.0.0.1:$port/serve-deployment.json" || true)"
             if test "$root_status" = 200 && test "$metadata_status" = 200; then
               healthy=true; break
             fi
@@ -239,7 +239,10 @@ jobs:
           type="$(curl "${args[@]}" --header 'Accept: application/json' \
             --output /dev/null --write-out '%{content_type}' \
             "${DEPLOYMENT_URL%/}/serve-deployment.json?run=$GITHUB_RUN_ID")"
-          [[ "$type" == application/json* ]]
+          [[ "$type" == application/json* ]] || {
+            echo "::error::serve-deployment.json returned '${type:-missing}' instead of application/json" >&2
+            exit 1
+          }
 
       - name: Roll back
         if: ${{ failure() && steps.activate.outcome == 'success' && steps.health.outcome == 'failure' }}

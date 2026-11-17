@@ -26,14 +26,24 @@ export default defineSsrMiddleware(({ app, resolve, render, serve }) => {
   // over to Vue and Vue Router to render our page
 
 
-  app.get(resolve.urlPath('/serve-deployment.json'), (req, res) => {
+  app.get(resolve.urlPath('/serve-deployment.json'), (_req, res) => {
     res.set({
-      'Content-Type': 'application/json',
-      'X-Frame-Options': 'SAMEORIGIN',
-      'Cache-Control': 'no-store',
-      'Pragma': 'no-cache'
+      'Content-Type': 'application/json; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
     });
-    res.sendFile(resolve.public('deployment.json'));
+
+    res.sendFile(resolve.public('deployment.json'), (error) => {
+      if (!error) return;
+
+      if (res.headersSent) {
+        res.end();
+        return;
+      }
+
+      const statusCode = 'code' in error && error.code === 'ENOENT' ? 404 : 500;
+      res.status(statusCode).json({ error: 'Deployment metadata unavailable' });
+    });
   });
 
   app.get(resolve.urlPath('{*path}'), async (req, res) => {
