@@ -48,8 +48,8 @@ jobs:
           npm --prefix src-ssr ci --ignore-scripts
           npm run postinstall
           npm test
-          npm audit --omit=dev --audit-level=high
-          npm --prefix src-ssr audit --omit=dev --audit-level=high
+          node scripts/audit-production.mjs
+          node scripts/audit-production.mjs src-ssr
           printf '{"commit":"%s","run_id":"%s"}\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" \
             > public/deployment.json
           npm run build:ssr
@@ -60,7 +60,7 @@ jobs:
           cp deploy/ssr-package-lock.json dist/ssr/package-lock.json
           test -s dist/ssr/client/deployment.json
           npm --prefix dist/ssr ci --omit=dev --ignore-scripts --no-audit --no-fund
-          npm --prefix dist/ssr audit --omit=dev --audit-level=high
+          node scripts/audit-production.mjs dist/ssr
           tar -C dist/ssr -czf "$RUNNER_TEMP/release.tgz" .
 
       - name: Configure SSH
