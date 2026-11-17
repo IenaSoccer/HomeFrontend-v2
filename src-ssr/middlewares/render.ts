@@ -26,7 +26,7 @@ export default defineSsrMiddleware(({ app, resolve, render, serve }) => {
   // over to Vue and Vue Router to render our page
 
 
-  app.get(resolve.urlPath('/serve-deployment.json'), (_req, res) => {
+  app.get(resolve.urlPath('/serve-deployment'), (_req, res) => {
     res.set({
       'Content-Type': 'application/json; charset=utf-8',
       'X-Content-Type-Options': 'nosniff',
