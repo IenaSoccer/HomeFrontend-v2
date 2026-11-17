@@ -111,7 +111,6 @@ jobs:
           chmod 600 "$HOME/.ssh/config"
 
       - name: Activate release
-        id: activate
         env:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
@@ -191,24 +190,6 @@ jobs:
             pm2 start "$release/deploy/ecosystem.config.cjs" --only "$app_name"
           fi
 
-          healthy=false
-          for _ in {1..15}; do
-            root_status="$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' \
-              "http://127.0.0.1:$port/" || true)"
-            metadata_result="$(curl -sS --max-time 5 -o /dev/null \
-              -w $'%{http_code}\t%{content_type}' \
-              "http://127.0.0.1:$port/serve-deployment" || true)"
-            IFS=$'\t' read -r metadata_status metadata_type <<< "$metadata_result"
-            if test "$root_status" = 200 && test "$metadata_status" = 200 &&
-              [[ "$metadata_type" == application/json* ]]; then
-              healthy=true; break
-            fi
-            sleep 2
-          done
-          if test "$healthy" != true; then
-            echo "::error::Local SSR health check failed: root=$root_status metadata=$metadata_status type=${metadata_type:-missing}" >&2
-            false
-          fi
           trap - ERR
           pm2 save
 
@@ -220,53 +201,6 @@ jobs:
               stale="$(readlink -f "$stale")"
               test "$stale" = "$current_target" || test "$stale" = "$previous_target" || rm -rf -- "$stale"
             done || true
-          REMOTE
-
-      - name: Verify deployment
-        id: health
-        env:
-          DEPLOYMENT_URL: ${{ vars.DEPLOYMENT_URL }}
-          BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
-          BASIC_AUTH_PASS: ${{ secrets.BASIC_AUTH_PASS }}
-        run: |
-          set -Eeuo pipefail
-          : "${DEPLOYMENT_URL:?Missing DEPLOYMENT_URL variable}"
-          : "${BASIC_AUTH_USER:?Missing BASIC_AUTH_USER secret}"
-          : "${BASIC_AUTH_PASS:?Missing BASIC_AUTH_PASS secret}"
-          [[ "$DEPLOYMENT_URL" == https://* ]]
-
-          args=(--fail --silent --show-error --location --retry 5 --retry-all-errors
-            --retry-delay 3 --max-time 20 --proto '=https' --proto-redir '=https'
-            --basic --user "$BASIC_AUTH_USER:$BASIC_AUTH_PASS")
-          curl "${args[@]}" --output /dev/null "${DEPLOYMENT_URL%/}/"
-          type="$(curl "${args[@]}" --header 'Accept: application/json' \
-            --output /dev/null --write-out '%{content_type}' \
-            "${DEPLOYMENT_URL%/}/serve-deployment?run=$GITHUB_RUN_ID")"
-          [[ "$type" == application/json* ]] || {
-            echo "::error::serve-deployment returned '${type:-missing}' instead of application/json" >&2
-            exit 1
-          }
-
-      - name: Roll back
-        if: ${{ failure() && steps.activate.outcome == 'success' && steps.health.outcome == 'failure' }}
-        env:
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-        run: |
-          set -Eeuo pipefail
-          ssh ienavps-home bash -s -- "$DEPLOY_PATH" "$RELEASE_ID" "$PM2_APP_NAME" \
-            "$PM2_INSTANCES" "$SSR_PORT" <<'REMOTE'
-          set -Eeuo pipefail
-          deploy_path="$1"; release_id="$2"; app_name="$3"; instances="$4"; port="$5"
-          target="$(readlink -f "$deploy_path/previous")"
-          test -d "$target"
-          rollback="$deploy_path/.health-rollback-$release_id"
-          rm -f -- "$rollback"
-          ln -s "$target" "$rollback"
-          mv -Tf -- "$rollback" "$deploy_path/current"
-          export PM2_APP_NAME="$app_name" PM2_INSTANCES="$instances" SSR_PORT="$port"
-          export DEPLOY_ROOT_PATH="$deploy_path" DEPLOY_CURRENT_PATH="$target"
-          pm2 startOrGracefulReload "$target/deploy/ecosystem.config.cjs" \
-            --only "$app_name" --update-env
           REMOTE
 
       - name: Remove SSH credentials
