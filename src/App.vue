@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onServerPrefetch, provide, reactive } from 'vue';
+import { onMounted, provide, reactive } from 'vue';
 import type { Mappings } from './contracts/Mappings';
 import type { UUID } from './contracts/UUID';
 import type { Resource } from './contracts/Resource';
@@ -28,7 +28,6 @@ async function loadMappings() {
   }
 }
 
-onServerPrefetch(loadMappings);
 onMounted(() => void loadMappings());
 
 async function ensureResource(uuid: UUID, resource: string) {

@@ -55,10 +55,16 @@ export default defineComponent({
     };
   },
   async mounted() {
-    this.mappings = await useMappingsStore().list();
+    try {
+      this.mappings = await useMappingsStore().list();
+      if (!this.mappings.defaults['news']) return;
 
-    this.news = await this.getAllPosts();
-    this.loaded = true;
+      this.news = await this.getAllPosts();
+    } catch (error) {
+      console.error('Impossibile caricare i contenuti correlati', error);
+    } finally {
+      this.loaded = true;
+    }
   },
   methods: {
     shuffleArray(array: Array<Resource<Attachment>>) {

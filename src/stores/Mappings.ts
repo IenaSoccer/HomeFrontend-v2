@@ -10,6 +10,7 @@ interface MappingsState {
 }
 
 const pendingRequests = new WeakMap<object, Promise<Mappings>>();
+const failedRequests = new WeakMap<object, Error>();
 
 export const useMappingsStore = defineStore('mappings', {
   state: (): MappingsState => ({
@@ -21,15 +22,24 @@ export const useMappingsStore = defineStore('mappings', {
       if (this.mappings) return this.mappings;
 
       const store = this as object;
+      const previousError = failedRequests.get(store);
+      if (previousError) throw previousError;
+
       const pendingRequest = pendingRequests.get(store);
       if (pendingRequest) return pendingRequest;
 
       const request = (async () => {
-        const response: AxiosResponse<ApiResponse> = await api.get('/mappings');
-        const mappings = extractBody<Mappings>(response);
-        this.mappings = mappings;
+        try {
+          const response: AxiosResponse<ApiResponse> = await api.get('/mappings');
+          const mappings = extractBody<Mappings>(response);
+          this.mappings = mappings;
 
-        return mappings;
+          return mappings;
+        } catch (error) {
+          const failure = error instanceof Error ? error : new Error(String(error));
+          failedRequests.set(store, failure);
+          throw failure;
+        }
       })().finally(() => {
         pendingRequests.delete(store);
       });
