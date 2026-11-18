@@ -24,7 +24,7 @@
               {{ 'Pubblicato il ' + new Date(post.created_at).toLocaleDateString() }}
             </div>
           </div>
-          <div class="roboto-flex text-lg py-8" v-html="sanitizedContent"></div>
+          <div class="post-content roboto-flex text-lg py-8" v-html="sanitizedContent"></div>
         </div>
         <div class="border-l-4 border-blue-700 my-8">
           <WRelatedPosts :currentPostId="post.id" />
@@ -59,6 +59,7 @@ import type { Resource } from '@/contracts/Resource';
 import type { Attachment } from '@/contracts/Attachment';
 
 const SITE_URL = 'https://www.ienasoccer.it';
+const SAFE_CSS_COLOR = /^(?:#[0-9a-f]{3,8}|rgba?\(\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)|[a-z]+)$/i;
 
 export default defineComponent({
   name: 'WPost',
@@ -109,11 +110,20 @@ export default defineComponent({
         ],
         allowedAttributes: {
           ...sanitizeHtml.defaults.allowedAttributes,
-          '*': ['class'],
+          '*': ['class', 'data-list', 'style'],
           a: ['href', 'name', 'rel', 'target'],
           img: ['alt', 'height', 'loading', 'src', 'title', 'width'],
           source: ['src', 'type'],
           video: ['controls', 'height', 'poster', 'preload', 'src', 'width'],
+        },
+        allowedStyles: {
+          '*': {
+            'background-color': [SAFE_CSS_COLOR],
+            color: [SAFE_CSS_COLOR],
+            'font-family': [/^(?:monospace|serif)$/i],
+            'font-size': [/^(?:10|18|32)px$/],
+            'text-align': [/^(?:center|justify|left|right)$/],
+          },
         },
         allowedSchemes: ['http', 'https', 'mailto', 'tel'],
         transformTags: {
@@ -134,3 +144,144 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.post-content {
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.post-content :deep(p),
+.post-content :deep(blockquote),
+.post-content :deep(ol),
+.post-content :deep(ul),
+.post-content :deep(pre) {
+  margin-block: 0 1rem;
+}
+
+.post-content :deep(h1),
+.post-content :deep(h2),
+.post-content :deep(h3) {
+  font-weight: 700;
+  line-height: 1.25;
+  margin-block: 1.5rem 0.75rem;
+}
+
+.post-content :deep(h1) {
+  font-size: 2rem;
+}
+
+.post-content :deep(h2) {
+  font-size: 1.5rem;
+}
+
+.post-content :deep(h3) {
+  font-size: 1.25rem;
+}
+
+.post-content :deep(ol),
+.post-content :deep(ul) {
+  padding-left: 1.75rem;
+}
+
+.post-content :deep(ol) {
+  list-style: decimal;
+}
+
+.post-content :deep(ul) {
+  list-style: disc;
+}
+
+.post-content :deep(blockquote) {
+  border-left: 4px solid #2563eb;
+  color: #4b5563;
+  padding-left: 1rem;
+}
+
+.post-content :deep(pre) {
+  background: #111827;
+  border-radius: 0.5rem;
+  color: #f9fafb;
+  overflow-x: auto;
+  padding: 1rem;
+}
+
+.post-content :deep(a) {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.post-content :deep(img),
+.post-content :deep(video) {
+  height: auto;
+  max-width: 100%;
+}
+
+.post-content :deep(.ql-align-center) {
+  text-align: center;
+}
+
+.post-content :deep(.ql-align-right) {
+  text-align: right;
+}
+
+.post-content :deep(.ql-align-justify) {
+  text-align: justify;
+}
+
+.post-content :deep(.ql-direction-rtl) {
+  direction: rtl;
+}
+
+.post-content :deep(.ql-font-serif) {
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.post-content :deep(.ql-font-monospace) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.post-content :deep(.ql-size-small) {
+  font-size: 0.75em;
+}
+
+.post-content :deep(.ql-size-large) {
+  font-size: 1.5em;
+}
+
+.post-content :deep(.ql-size-huge) {
+  font-size: 2.5em;
+}
+
+.post-content :deep(.ql-indent-1) {
+  padding-left: 3em;
+}
+
+.post-content :deep(.ql-indent-2) {
+  padding-left: 6em;
+}
+
+.post-content :deep(.ql-indent-3) {
+  padding-left: 9em;
+}
+
+.post-content :deep(.ql-indent-4) {
+  padding-left: 12em;
+}
+
+.post-content :deep(.ql-indent-5) {
+  padding-left: 15em;
+}
+
+.post-content :deep(.ql-indent-6) {
+  padding-left: 18em;
+}
+
+.post-content :deep(.ql-indent-7) {
+  padding-left: 21em;
+}
+
+.post-content :deep(.ql-indent-8) {
+  padding-left: 24em;
+}
+</style>
