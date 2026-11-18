@@ -16,8 +16,8 @@
       :role="collapsed && !focused ? 'button' : 'search'"
       :tabindex="collapsed && !focused ? 0 : -1"
       :aria-label="collapsed && !focused ? 'Apri ricerca' : 'Ricerca nel sito'"
-      @keydown.enter.prevent="onFieldClick"
-      @keydown.space.prevent="onFieldClick"
+      @keydown.enter.self.prevent="onFieldClick"
+      @keydown.space.self.prevent="onFieldClick"
     >
       <q-icon name="search" size="20px" class="text-[#239ced]" />
       <input
@@ -156,6 +156,7 @@ const MIN_QUERY_LENGTH = 2;
 const MAX_RESULTS = 8;
 const DEBOUNCE_MS = 250;
 const COLLAPSE_BREAKPOINT = 1280;
+const HOME_SECTIONS = ['team', 'video', 'carosello', 'news'] as const;
 
 interface SearchGroup {
   key: string;
@@ -310,7 +311,7 @@ export default defineComponent({
     go(resource: Resource) {
       this.close();
       this.reset();
-      void this.$router.push(this.urlFor(resource));
+      void this.$router.push({ path: this.urlFor(resource), force: true });
     },
     goToFirst() {
       const [first] = this.results;
@@ -330,9 +331,11 @@ export default defineComponent({
       });
     },
     urlFor(resource: Resource): string {
-      const gallery = this.mappings?.defaults?.['galleria']?.id;
+      const defaults = this.mappings?.defaults ?? {};
+      const section = HOME_SECTIONS.find((key) => defaults[key]?.id === resource.fid);
 
-      if (gallery && resource.fid === gallery) return `/gallery/${resource.id}`;
+      if (section) return `/index/${section}`;
+      if (defaults['galleria']?.id === resource.fid) return `/gallery/${resource.id}`;
 
       return `/post/${resource.id}/${slugify(resource.name)}`;
     },

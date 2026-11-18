@@ -1,0 +1,32 @@
+name: Verify SSR
+description: Install dependencies, run frontend checks and audit production dependencies.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: '22.23.5'
+        cache: npm
+        cache-dependency-path: |
+          package-lock.json
+          src-ssr/package-lock.json
+          deploy/ssr-package-lock.json
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        npm install --global npm@11.21.2 --ignore-scripts
+        npm ci --ignore-scripts
+        npm --prefix src-ssr ci --ignore-scripts
+        npm run postinstall
+
+    - name: Run lint and type checks
+      shell: bash
+      run: npm test
+
+    - name: Audit production dependencies
+      shell: bash
+      run: |
+        node scripts/audit-production.mjs
+        node scripts/audit-production.mjs src-ssr

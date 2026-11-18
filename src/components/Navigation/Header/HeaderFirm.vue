@@ -8,10 +8,9 @@
       </span>
       <div>
         <router-link to="/" class="hidden lg:block" aria-label="Vai alla homepage">
-          <q-img
+          <img
             src="/iena-logo.png"
-            img-class="object-contain"
-            class="px-4 w-24 h-full transform transition-all hover:rotate-12"
+            class="mx-4 size-16 object-contain transition-transform hover:rotate-12"
             alt="Logo Iena Soccer"
           />
         </router-link>

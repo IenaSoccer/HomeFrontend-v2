@@ -1,8 +1,10 @@
 const path = require('node:path');
 
-const appName = process.env.PM2_APP_NAME || 'iena-homefrontend';
+const staging = process.env.DEPLOY_ENVIRONMENT === 'staging';
+const appName = process.env.PM2_APP_NAME ||
+  (staging ? 'iena-homefrontend-staging' : 'iena-homefrontend');
 const deployRoot = process.env.DEPLOY_ROOT_PATH || process.cwd();
-const port = process.env.SSR_PORT || '3000';
+const port = process.env.SSR_PORT || (staging ? '3001' : '3000');
 const instances = Number(process.env.PM2_INSTANCES || 2);
 
 module.exports = {

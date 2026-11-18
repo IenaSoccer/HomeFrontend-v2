@@ -20,7 +20,12 @@
     <q-intersection once transition="slide-down" v-if="folders && folders.length > 0">
       <div class="flex flex-row flex-wrap justify-start items-center">
         <div v-for="f in folders" :key="f.id">
-          <q-btn @click="changeFolder(f)" flat class="h-32 w-64 m-4 border-b-4 border-blue-700">
+          <q-btn
+            :to="routeAlbums ? `/gallery/${f.id}` : undefined"
+            @click="!routeAlbums && $emit('select', f)"
+            flat
+            class="h-32 w-64 m-4 border-b-4 border-blue-700"
+          >
             <q-img :src="thumbnails[f.id]?.data.path ? thumb(thumbnails[f.id]!.data.path) : ''"
               class="absolute-full bg-cover bg-center h-full border-b-4" :class="`border-[#0000ff]`">
               <div class="text-subtitle2 flex h-full w-full flex-col flex-center">
@@ -41,14 +46,13 @@
   </div>
 </template>
 <script lang="ts">
-import type { EventBus } from 'quasar';
 import type { Attachment } from '@/contracts/Attachment';
 import type { Resource } from '@/contracts/Resource';
 import type { UUID } from '@/contracts/UUID';
 import { extractThumbnails } from '@/resources/loader';
 import { useResourceStore } from '@/stores/Resources';
 import { attachmentUrl } from '@/utils/format';
-import { defineComponent, inject, ref } from 'vue';
+import { defineComponent, ref } from 'vue';
 
 import ESkeleton from '@/components/Elements/ESkeleton.vue';
 
@@ -64,7 +68,12 @@ export default defineComponent({
       type: {} as () => Resource<UUID>[],
       required: true,
     },
+    routeAlbums: {
+      type: Boolean,
+      default: false,
+    },
   },
+  emits: { select: (album: Resource<UUID>) => Boolean(album.id) },
   watch: {
     folders: {
       immediate: true,
@@ -83,16 +92,12 @@ export default defineComponent({
     async getThumbnail(folder: Resource<UUID>) {
       return (await extractThumbnails(folder.thumbnail as UUID, useResourceStore()))[0];
     },
-    changeFolder(f: Resource<UUID>) {
-      this.bus.emit('change-folder', f);
-    },
     thumb(url: string) {
       return attachmentUrl(url, 800);
     },
   },
   data() {
     return {
-      bus: inject('bus') as EventBus,
       loaded: false,
       thumbnails: createThumbnailMap(),
     };

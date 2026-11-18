@@ -21,18 +21,15 @@
             target="_blank"
             rel="noopener noreferrer"
           />
-          <div class="flex flex-col justify-end text-3xl roboto-flex h-full">
-            <div class="z-10 w-full flex flex-row flex-nowrap justify-between items-stretch">
-              <div
-                class="bg-[rgba(0,0,0,.6)] flex flex-row items-center px-5 py-3 min-w-[30%] w-fit"
-              >
-                <div class="font-light whitespace-nowrap">{{ s.data.name }}</div>
-              </div>
-              <div class="bg-primary opacity-70 flex flex-row justify-center items-center shrink-0">
-                <q-btn square padding="md" :label="'#' + tag" flat v-for="(tag, i) in data.attributes?.tags" :key="i"
-                  class="text-sm font-light">
-                </q-btn>
-              </div>
+          <div class="relative z-10 flex h-full flex-col flex-nowrap justify-between roboto-flex pointer-events-none md:flex-row md:items-end">
+            <div class="bg-black/60 min-w-0 px-5 py-3 pr-20 text-2xl font-light wrap-anywhere md:min-w-[30%] md:pr-5 md:text-3xl">
+              {{ s.data.name }}
+            </div>
+            <div v-if="data.attributes?.tags?.length"
+              class="pointer-events-auto bg-primary opacity-70 flex max-w-full flex-row flex-wrap justify-end self-end md:max-w-[60%]">
+              <q-btn square padding="md" :label="'#' + tag" flat v-for="(tag, i) in data.attributes.tags" :key="i"
+                class="max-w-full text-sm font-light wrap-anywhere">
+              </q-btn>
             </div>
           </div>
         </q-carousel-slide>

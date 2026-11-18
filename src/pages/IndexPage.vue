@@ -1,9 +1,8 @@
 <template>
   <q-page>
     <div v-if="loaded">
-      <div>
+      <div ref="carosello" class="scroll-mt-[100px]">
         <WCarousel
-          ref="Carosello"
           :mantainAspectRatio="false"
           :id="mappings.defaults['carosello']?.id"
           :carousel="pickCarousel(resources['carosello'])"
@@ -12,7 +11,7 @@
         <ESocialBar />
       </div>
 
-      <div>
+      <div ref="team" class="scroll-mt-[100px]">
         <ESectionWrapper
           parentClass="bg-training pb-8 bg-center bg-cover"
           childClass="text-7xl text-left px-4 coolvetica md:px-8 text-[#f3f4f6] drop-shadow-xl"
@@ -20,31 +19,32 @@
           underlined
         >
           <template v-slot:content>
-            <WTeam ref="Team" :id="mappings.defaults['team']?.id" :team="resources['team'] || []" />
+            <WTeam :id="mappings.defaults['team']?.id" :team="resources['team'] || []" />
           </template>
         </ESectionWrapper>
       </div>
 
       <ESectionWrapper
-        parentClass="bg-[#f3f4f6] bg-newspaper"
+        ref="news"
+        parentClass="bg-[#f3f4f6] bg-newspaper scroll-mt-[100px]"
         childClass="p-8 text-7xl text-left pb-8 text-black coolvetica md:px-8"
         title="Notizie"
         underlined
       >
         <template v-slot:content>
-          <WNews ref="News" :id="mappings.defaults['news']?.id" :news="resources['news'] || []" />
+          <WNews :id="mappings.defaults['news']?.id" :news="resources['news'] || []" />
         </template>
       </ESectionWrapper>
 
       <ESectionWrapper
-        parentClass="bg-back1 bg-cover min-h-[700px] pb-8"
+        ref="video"
+        parentClass="bg-back1 bg-cover min-h-[700px] pb-8 scroll-mt-[100px]"
         childClass="py-8 text-4xl text-left pb-8 text-[#f3f4f6] px-8 coolvetica"
         title="Video Popolari"
         underlined
       >
         <template v-slot:content>
           <WVideos
-            ref="Video"
             :id="mappings.defaults['video']?.id"
             :videos="resources['video'] || []"
           />
@@ -83,7 +83,6 @@ import WCarousel from '@/components/Widgets/Mappable/WCarousel.vue';
 import ESectionWrapper from '@/components/Elements/ESectionWrapper.vue';
 import ESocialBar from '@/components/Elements/ESocialBar.vue';
 
-import { scroll, type EventBus } from 'quasar';
 import type { Resource } from '@/contracts/Resource';
 import type { UUID } from '@/contracts/UUID';
 
@@ -98,11 +97,8 @@ export default defineComponent({
     ESocialBar,
   },
 
-  $refs: {},
-
   data() {
     return {
-      bus: inject('bus') as EventBus,
       mappings: reactive(inject('mappings') as Mappings),
       resources: reactive(inject('data') as Record<string, Resource<UUID>[]>),
       ensureResource: inject('ensureResource') as (
@@ -115,6 +111,17 @@ export default defineComponent({
   },
 
   methods: {
+    scrollToSection() {
+      const section = this.$route.params.section;
+      if (!this.loaded || typeof section !== 'string') return;
+
+      const ref = this.$refs[section.toLowerCase()] as
+        | HTMLElement
+        | InstanceType<typeof ESectionWrapper>
+        | undefined;
+      const element = ref && ('$el' in ref ? (ref.$el as HTMLElement) : ref);
+      if (element instanceof HTMLElement) element.scrollIntoView({ behavior: 'smooth' });
+    },
     pickCarousel(list: Resource<UUID>[] | undefined): Resource<UUID> | undefined {
       if (!list || list.length === 0) return undefined;
 
@@ -146,22 +153,13 @@ export default defineComponent({
       },
     },
 
-    $route(n) {
-      const section = n.params.section as string;
-      const ref = this.$refs[section] as InstanceType<typeof WCarousel> | undefined;
-
-      if (!ref) return;
-
-      // caso componente Vue
-      const el = '$el' in ref ? (ref.$el as HTMLElement) : (ref as HTMLElement);
-
-      if (el) {
-        const { getScrollTarget, setVerticalScrollPosition } = scroll;
-        const target = getScrollTarget(el);
-        const offset = el.offsetTop;
-
-        setVerticalScrollPosition(target, offset, 500); // 500ms smooth scroll
-      }
+    loaded: {
+      flush: 'post',
+      handler: 'scrollToSection',
+    },
+    $route: {
+      flush: 'post',
+      handler: 'scrollToSection',
     },
   },
 });

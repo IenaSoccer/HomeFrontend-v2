@@ -11,198 +11,30 @@ concurrency:
   group: deploy-${{ github.ref_name }}
   cancel-in-progress: false
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   deploy:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: ${{ github.ref_name == 'release' && 'production' || 'staging' }}
-    env:
-      PM2_APP_NAME: iena-homefrontend
-      PM2_INSTANCES: '2'
-      SSR_PORT: '3000'
-      RELEASE_ID: ${{ github.sha }}-${{ github.run_attempt }}
-
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '22.23.5'
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            src-ssr/package-lock.json
-            deploy/ssr-package-lock.json
+      - uses: ./.github/actions/verify-ssr
 
-      - name: Verify and package
-        run: |
-          set -Eeuo pipefail
-          npm install --global npm@11.21.2 --ignore-scripts
-          npm ci --ignore-scripts
-          npm --prefix src-ssr ci --ignore-scripts
-          npm run postinstall
-          npm test
-          node scripts/audit-production.mjs
-          node scripts/audit-production.mjs src-ssr
-          printf '{"commit":"%s","run_id":"%s"}\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" \
-            > public/deployment.json
-          npm run build:ssr
-          rm -f -- public/deployment.json
+      - name: Build and package release
+        run: bash deploy/package-release.sh
 
-          mkdir -p dist/ssr/deploy
-          cp deploy/ecosystem.config.cjs dist/ssr/deploy/
-          cp deploy/ssr-package-lock.json dist/ssr/package-lock.json
-          test -s dist/ssr/client/deployment.json
-          npm --prefix dist/ssr ci --omit=dev --ignore-scripts --no-audit --no-fund
-          node scripts/audit-production.mjs dist/ssr
-          tar -C dist/ssr -czf "$RUNNER_TEMP/release.tgz" .
-
-      - name: Configure SSH
+      - name: Deploy release over SSH
         env:
+          DEPLOY_ENVIRONMENT: ${{ github.ref_name == 'release' && 'production' || 'staging' }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          RELEASE_ID: ${{ github.sha }}-${{ github.run_attempt }}
+          PM2_INSTANCES: '2'
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
           SSH_USER: ${{ secrets.USERNAME }}
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-        run: |
-          set -Eeuo pipefail
-          : "${SSH_HOST:?Missing SSH_HOST secret}"
-          : "${SSH_USER:?Missing USERNAME secret}"
-          : "${SSH_KEY:?Missing SSH_PRIVATE_KEY secret}"
-          : "${SSH_KNOWN_HOSTS:?Missing SSH_KNOWN_HOSTS secret}"
-          : "${DEPLOY_PATH:?Missing DEPLOY_PATH secret}"
-          [[ "$SSH_HOST" =~ ^[A-Za-z0-9.-]+$ ]]
-          [[ "$SSH_PORT" =~ ^[0-9]{1,5}$ ]] && (( SSH_PORT >= 1 && SSH_PORT <= 65535 ))
-          [[ "$SSH_USER" =~ ^[A-Za-z_][A-Za-z0-9_-]*$ ]]
-          [[ "$DEPLOY_PATH" =~ ^/[A-Za-z0-9._/-]+$ && "$DEPLOY_PATH" != *".."* && "$DEPLOY_PATH" != / ]]
-
-          install -d -m 700 "$HOME/.ssh"
-          printf '%s\n' "$SSH_KEY" | tr -d '\r' > "$HOME/.ssh/deploy_key"
-          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/known_hosts.source"
-          chmod 600 "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts.source"
-          ssh-keygen -y -P '' -f "$HOME/.ssh/deploy_key" >/dev/null
-          awk '$1 !~ /^#/ && NF >= 3 && $2 ~ /^(ssh-|ecdsa-|sk-)/ {
-            print "ienavps-home", $2, $3
-          }' "$HOME/.ssh/known_hosts.source" > "$HOME/.ssh/known_hosts"
-          ssh-keygen -F ienavps-home -f "$HOME/.ssh/known_hosts" >/dev/null
-          chmod 600 "$HOME/.ssh/known_hosts"
-
-          cat > "$HOME/.ssh/config" <<SSH_CONFIG
-          Host ienavps-home
-            HostName $SSH_HOST
-            Port $SSH_PORT
-            User $SSH_USER
-            IdentityFile $HOME/.ssh/deploy_key
-            UserKnownHostsFile $HOME/.ssh/known_hosts
-            HostKeyAlias ienavps-home
-            IdentitiesOnly yes
-            BatchMode yes
-            StrictHostKeyChecking yes
-            ConnectTimeout 15
-            LogLevel ERROR
-          SSH_CONFIG
-          chmod 600 "$HOME/.ssh/config"
-
-      - name: Activate release
-        env:
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-        run: |
-          set -Eeuo pipefail
-          checksum="$(sha256sum "$RUNNER_TEMP/release.tgz" | awk '{ print $1 }')"
-          ssh ienavps-home "mkdir -p -- '$DEPLOY_PATH/incoming' '$DEPLOY_PATH/releases' '$DEPLOY_PATH/logs'"
-          scp "$RUNNER_TEMP/release.tgz" "ienavps-home:$DEPLOY_PATH/incoming/$RELEASE_ID.tgz"
-
-          ssh ienavps-home bash -s -- "$DEPLOY_PATH" "$RELEASE_ID" "$checksum" \
-            "$PM2_APP_NAME" "$PM2_INSTANCES" "$SSR_PORT" <<'REMOTE'
-          set -Eeuo pipefail
-          deploy_path="$1"; release_id="$2"; checksum="$3"
-          app_name="$4"; instances="$5"; port="$6"
-          [[ "$deploy_path" =~ ^/[A-Za-z0-9._/-]+$ && "$deploy_path" != *".."* && "$deploy_path" != / ]]
-          [[ "$release_id" =~ ^[0-9a-f]{40}-[0-9]+$ ]]
-          [[ "$instances" =~ ^[1-9][0-9]*$ ]]
-          [[ "$port" =~ ^[0-9]{1,5}$ ]] && (( port >= 1 && port <= 65535 ))
-
-          archive="$deploy_path/incoming/$release_id.tgz"
-          releases="$deploy_path/releases"
-          release="$releases/$release_id"
-          current="$deploy_path/current"
-          previous="$deploy_path/previous"
-          old="$(readlink -f "$current" 2>/dev/null || true)"
-
-          test -f "$archive"
-          test "$(sha256sum "$archive" | awk '{ print $1 }')" = "$checksum"
-          test ! -e "$release"
-          mkdir -p -- "$release/logs"
-          tar -xzf "$archive" -C "$release"
-          rm -f -- "$archive"
-          test -f "$release/index.js"
-          test -f "$release/deploy/ecosystem.config.cjs"
-          metadata="$release/client/deployment.json"
-          test -f "$metadata"
-
-          test -z "$old" || test ! -d "$old" || ln -sfn "$old" "$previous"
-          next="$deploy_path/.current-$release_id"
-          rm -f -- "$next"
-          ln -s "$release" "$next"
-          mv -Tf -- "$next" "$current"
-
-          export PM2_APP_NAME="$app_name" PM2_INSTANCES="$instances" SSR_PORT="$port"
-          export DEPLOY_ROOT_PATH="$deploy_path" DEPLOY_CURRENT_PATH="$release"
-          rollback() {
-            if test -n "$old" && test -d "$old"; then
-              rollback_link="$deploy_path/.rollback-$release_id"
-              rm -f -- "$rollback_link"
-              ln -s "$old" "$rollback_link"
-              mv -Tf -- "$rollback_link" "$current"
-              export DEPLOY_CURRENT_PATH="$old"
-              pm2 startOrGracefulReload "$old/deploy/ecosystem.config.cjs" \
-                --only "$app_name" --update-env || true
-            fi
-          }
-          trap rollback ERR
-
-          if pm2 describe "$app_name" >/dev/null 2>&1; then
-            pm2_cwd="$(pm2 jlist | node -e '
-              let input = "";
-              process.stdin.setEncoding("utf8");
-              process.stdin.on("data", chunk => { input += chunk; });
-              process.stdin.on("end", () => {
-                const app = JSON.parse(input).find(item => item.name === process.argv[1]);
-                process.stdout.write(app?.pm2_env?.pm_cwd || "");
-              });
-            ' "$app_name")"
-            if test "$pm2_cwd" = "$deploy_path"; then
-              pm2 startOrGracefulReload "$release/deploy/ecosystem.config.cjs" \
-                --only "$app_name" --update-env
-            else
-              echo "Migrating $app_name to the stable deployment entrypoint"
-              pm2 delete "$app_name"
-              pm2 start "$release/deploy/ecosystem.config.cjs" --only "$app_name"
-            fi
-          else
-            pm2 start "$release/deploy/ecosystem.config.cjs" --only "$app_name"
-          fi
-
-          trap - ERR
-          pm2 save
-
-          current_target="$(readlink -f "$current")"
-          previous_target="$(readlink -f "$previous" 2>/dev/null || true)"
-          find "$releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' |
-            sort -rn | tail -n +6 | cut -d' ' -f2- |
-            while IFS= read -r stale; do
-              stale="$(readlink -f "$stale")"
-              test "$stale" = "$current_target" || test "$stale" = "$previous_target" || rm -rf -- "$stale"
-            done || true
-          REMOTE
-
-      - name: Remove SSH credentials
-        if: ${{ always() }}
-        run: rm -f -- "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts" "$HOME/.ssh/known_hosts.source" "$HOME/.ssh/config"
+        run: bash deploy/upload-release.sh
