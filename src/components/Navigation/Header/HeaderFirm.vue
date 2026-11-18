@@ -10,7 +10,7 @@
         <router-link to="/" class="hidden lg:block" aria-label="Vai alla homepage">
           <img
             src="/iena-logo.png"
-            class="mx-4 size-16 object-contain transition-transform hover:rotate-12"
+            class="mx-4 size-[72px] object-contain transition-transform hover:rotate-12"
             alt="Logo Iena Soccer"
           />
         </router-link>

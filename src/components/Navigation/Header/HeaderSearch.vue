@@ -336,6 +336,7 @@ export default defineComponent({
 
       if (section) return `/index/${section}`;
       if (defaults['galleria']?.id === resource.fid) return `/gallery/${resource.id}`;
+      if (defaults['storia']?.id === resource.fid) return '/about';
 
       return `/post/${resource.id}/${slugify(resource.name)}`;
     },
@@ -350,6 +351,7 @@ export default defineComponent({
       if (defaults['video']?.id === resource.fid) return 'play_circle';
       if (defaults['galleria']?.id === resource.fid) return 'photo_library';
       if (defaults['carosello']?.id === resource.fid) return 'image';
+      if (defaults['storia']?.id === resource.fid) return 'history';
 
       return 'article';
     },

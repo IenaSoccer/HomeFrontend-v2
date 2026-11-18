@@ -2,10 +2,10 @@
   <div class="flex flex-row justify-center items-center">
     <div>
       <a href="#/" class="block">
-        <q-img
+        <img
           src="/iena-logo.png"
-          img-class="object-contain"
-          class="px-4 w-24 h-full transform transition-all hover:rotate-12"
+          class="mx-3 size-12 object-contain transition-transform hover:rotate-12"
+          alt="Logo Iena Soccer"
         />
       </a>
     </div>
